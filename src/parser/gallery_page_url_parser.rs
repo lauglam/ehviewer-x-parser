@@ -11,6 +11,9 @@ pub struct GalleryPageUrl {
 
 impl GalleryPageUrl {
     pub fn parse(url: &str, strict: bool) -> Result<GalleryPageUrl, String> {
+        const URL_STRICT_PATTERN: &str = const_concat!("https?://(?:", eh_url::DOMAIN_EX, "|", eh_url::DOMAIN_E, "|", eh_url::DOMAIN_LO_FI, ")/s/([0-9a-f]{10})/(\\d+)-(\\d+)");
+        const URL_PATTERN: &str = "([0-9a-f]{10})/(\\d+)-(\\d+)";
+
         let regex = Regex::new(if strict { URL_STRICT_PATTERN } else { URL_PATTERN }).unwrap();
         if regex.is_match(url) {
             let mut ms = regex.find_iter(url);
@@ -30,6 +33,3 @@ impl GalleryPageUrl {
         Err(String::from("Parses gallery page url fail."))
     }
 }
-
-const URL_STRICT_PATTERN: &str = const_concat!("https?://(?:", eh_url::DOMAIN_EX, "|", eh_url::DOMAIN_E, "|", eh_url::DOMAIN_LO_FI, ")/s/([0-9a-f]{10})/(\\d+)-(\\d+)");
-const URL_PATTERN: &str = "([0-9a-f]{10})/(\\d+)-(\\d+)";

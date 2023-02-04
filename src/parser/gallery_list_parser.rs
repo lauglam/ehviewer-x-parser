@@ -125,6 +125,8 @@ fn parse_pages(document: &str) -> Result<usize, String> {
 }
 
 fn parse_rating(rating_style: &str) -> String {
+    const PATTERN_RATING: &str = r#"\d+px"#;
+
     let mut result = String::new();
     let reg = Regex::new(PATTERN_RATING).unwrap();
     let mut n1 = isize::MIN;
@@ -155,6 +157,7 @@ fn parse_rating(rating_style: &str) -> String {
 }
 
 fn parse_favorite_slot(style: &str) -> isize {
+    const PATTERN_FAVORITE_SLOT: &str = r#"background-color:rgba\((\d+),(\d+),(\d+),"#;
     let reg = Regex::new(PATTERN_FAVORITE_SLOT).unwrap();
 
     if reg.is_match(style) {
@@ -176,9 +179,7 @@ fn parse_favorite_slot(style: &str) -> isize {
     -2
 }
 
-const PATTERN_RATING: &str = r#"\d+px"#;
 const PATTERN_THUMB_SIZE: &str = r#"height:(\d+)px;width:(\d+)px"#;
-const PATTERN_FAVORITE_SLOT: &str = r#"background-color:rgba\((\d+),(\d+),(\d+),"#;
 const PATTERN_PAGES: &str = r#"(\d+) page"#;
 const PATTERN_NEXT_PAGE: &str = r#"page=(\d+)"#;
 
