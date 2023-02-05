@@ -1,4 +1,5 @@
 pub mod archive_parser;
+pub mod category_parser;
 pub mod event_pane_parser;
 pub mod favorites_parser;
 pub mod forums_parser;

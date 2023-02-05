@@ -6,10 +6,11 @@ const UNESCAPE_CHARACTER_LIST: [&str; 7] = ["&", "<", ">", "\"", "'", "×", " "]
 #[inline]
 pub fn unescape_xml(str: &str) -> Cow<str> {
     let mut result = Cow::Borrowed(str);
-    for index in 0..ESCAPE_CHARACTER_LIST.len() {
-        if str.contains(ESCAPE_CHARACTER_LIST[index]) {
-            result = Cow::Owned(result.replace(ESCAPE_CHARACTER_LIST[index], UNESCAPE_CHARACTER_LIST[index]));
-        }
+    let idx_opt = ESCAPE_CHARACTER_LIST.iter()
+        .position(|&escape| str.contains(escape));
+
+    if let Some(idx) = idx_opt {
+        result = Cow::Owned(result.replace(ESCAPE_CHARACTER_LIST[idx], UNESCAPE_CHARACTER_LIST[idx]));
     }
 
     result
@@ -34,6 +35,11 @@ pub fn parse_isize(str: &str, or_else: isize) -> isize {
 }
 
 #[inline]
+pub fn parse_u64(str: &str, or_else: u64) -> u64 {
+    trim(str).parse::<u64>().unwrap_or(or_else)
+}
+
+#[inline]
 pub fn parse_i64(str: &str, or_else: i64) -> i64 {
     trim(str).parse::<i64>().unwrap_or(or_else)
 }
@@ -52,18 +58,16 @@ mod tests {
     fn unescape_xml_test() {
         let r = generate_range();
         let input = &ESCAPE_CHARACTER_LIST[r.0..r.1].join("");
-        let expect = &UNESCAPE_CHARACTER_LIST[r.0..r.1].join("");
 
-        assert_eq!(&unescape_xml(input), expect);
+        assert_eq!(&unescape_xml(input), &UNESCAPE_CHARACTER_LIST[r.0..r.1].join(""));
     }
 
     #[test]
     fn trim_test() {
         let r = generate_range();
         let input = &format!("{} ", ESCAPE_CHARACTER_LIST[r.0..r.1].join(""));
-        let expect = &UNESCAPE_CHARACTER_LIST[r.0..r.1].join("");
 
-        assert_eq!(&trim(input), expect);
+        assert_eq!(&trim(input), &UNESCAPE_CHARACTER_LIST[r.0..r.1].join(""));
     }
 
     fn generate_range() -> (usize, usize) {

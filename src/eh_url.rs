@@ -5,7 +5,7 @@ pub const SITE_EX: usize = 1;
 
 pub const DOMAIN_EX: &str = "exhentai.org";
 pub const DOMAIN_E: &str = "e-hentai.org";
-pub const DOMAIN_LO_FI: &str = "lofi.e-hentai.org";
+pub const DOMAIN_LOFI: &str = "lofi.e-hentai.org";
 
 pub const HOST_EX: &str = const_concat!("https://", DOMAIN_EX, "/");
 pub const HOST_E: &str = const_concat!("https://", DOMAIN_E, "/");
@@ -33,8 +33,8 @@ pub const REFERER_E: &str = const_concat!("https://", DOMAIN_E);
 pub const ORIGIN_EX: &str = REFERER_EX;
 pub const ORIGIN_E: &str = REFERER_E;
 
-pub const URL_U_CONFIG_E: &str = const_concat!(HOST_E, "uconfig.php");
-pub const URL_U_CONFIG_EX: &str = const_concat!(HOST_EX, "uconfig.php");
+pub const URL_UCONFIG_E: &str = const_concat!(HOST_E, "uconfig.php");
+pub const URL_UCONFIG_EX: &str = const_concat!(HOST_EX, "uconfig.php");
 
 pub const URL_MY_TAGS_E: &str = const_concat!(HOST_E, "mytags");
 pub const URL_MY_TAGS_EX: &str = const_concat!(HOST_EX, "mytags");

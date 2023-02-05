@@ -1,5 +1,5 @@
 use visdom::Vis;
-use crate::gallery_info::GalleryInfo;
+// use crate::gallery_info::GalleryInfo;
 use crate::utils::trim;
 
 #[derive(Debug, PartialEq)]
@@ -10,7 +10,7 @@ pub struct Favorite {
     pub count_array: [usize; 10],
     pub pages: usize,
     pub next_page: usize,
-    pub gallery_info_vec: Vec<GalleryInfo>,
+    // pub gallery_info_vec: Vec<GalleryInfo>,
 }
 
 pub fn parse(document: &str) -> Result<Favorite, String> {
@@ -23,7 +23,7 @@ pub fn parse(document: &str) -> Result<Favorite, String> {
         if let Ok(root) = Vis::load(document) {
             let fps = root.find(".ido .fp");
 
-            assert_eq!(10, fps.length());
+            assert_eq!(fps.length(), 10);
             for fp in fps {
                 let count = fp.child_nodes_item(0).unwrap();
                 let cat = fp.child_nodes_item(2).unwrap();
@@ -50,6 +50,6 @@ mod tests {
     fn sign_in_required_test() {
         let document = read_test_file("sign_in_required");
         let result = parse(&document);
-        assert_eq!(Err(String::from("This page requires you to log on.")), result)
+        assert_eq!(result, Err(String::from("This page requires you to log on.")));
     }
 }

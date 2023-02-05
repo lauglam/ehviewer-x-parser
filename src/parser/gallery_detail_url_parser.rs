@@ -1,22 +1,22 @@
 use regex::Regex;
 use crate::const_concat;
 use crate::eh_url;
-use crate::utils::parse_i64;
+use crate::utils::parse_u64;
 
 pub struct GalleryDetailUrl {
-    pub gid: i64,
+    pub gid: u64,
     pub token: String,
 }
 
 impl GalleryDetailUrl {
     pub fn parse(url: &str, strict: bool) -> Result<GalleryDetailUrl, String> {
-        const URL_STRICT_PATTERN: &str = const_concat!("https?://(?:", eh_url::DOMAIN_EX, "|", eh_url::DOMAIN_E, "|", eh_url::DOMAIN_LO_FI, ")/(?:g|mpv)/(\\d+)/([0-9a-f]{10})");
+        const URL_STRICT_PATTERN: &str = const_concat!("https?://(?:", eh_url::DOMAIN_EX, "|", eh_url::DOMAIN_E, "|", eh_url::DOMAIN_LOFI, ")/(?:g|mpv)/(\\d+)/([0-9a-f]{10})");
         const URL_PATTERN: &str = "(\\d+)/([0-9a-f]{10})(?:[^0-9a-f]|$)";
 
         let regex = Regex::new(if strict { URL_STRICT_PATTERN } else { URL_PATTERN }).unwrap();
         if regex.is_match(url) {
             let cap = regex.captures(url).unwrap();
-            let gid = parse_i64(&cap[1], -1 as i64);
+            let gid = parse_u64(&cap[1], 0 as u64);
             let token = String::from(&cap[2]);
 
             if gid > 0 {
