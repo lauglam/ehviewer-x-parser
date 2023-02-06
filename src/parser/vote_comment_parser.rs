@@ -8,7 +8,7 @@ pub struct VoteComment {
     pub score: i32,
     #[serde(alias = r#"comment_vote"#)]
     pub vote: u32,
-    // todo: need expect_vote?
+    // TODO need expect_vote?
     // pub expect_vote: u32,
 }
 

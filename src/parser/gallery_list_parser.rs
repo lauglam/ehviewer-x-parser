@@ -129,7 +129,7 @@ impl GalleryInfo {
                 thumb_height = parse_usize(&captures[1], 0);
                 thumb_width = parse_usize(&captures[2], 0);
 
-                // todo: setting
+                // TODO setting
                 let src = img.attr("src").unwrap().to_string();
                 thumb = src;
 
@@ -350,7 +350,7 @@ pub struct GalleryList {
 impl GalleryList {
     pub fn parse(document: &str) -> Result<GalleryList, String> {
         if let Ok(root) = Vis::load(document) {
-            // todo: parse pages
+            // TODO parse pages
             let next = 2453493 as usize;
             let jump = None;
             let seek = None;

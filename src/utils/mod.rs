@@ -2,6 +2,7 @@ mod parser;
 
 pub mod const_concat;
 pub mod test;
+pub mod input;
 
 pub use parser::parse_usize;
 pub use parser::parse_isize;
