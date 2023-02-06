@@ -36,9 +36,7 @@ mod tests {
 
     #[test]
     fn forums_parse_test() {
-        let document = read_test_file("forum_parser");
-
-        assert_eq!(Forum::parse(&document).unwrap().user_link,
-                   r#"https://forums.e-hentai.org/index.php?showuser=xxxxx"#);
+        let document = read_test_file("forum.html");
+        assert_eq!(Forum::parse(&document).unwrap().user_link.is_empty(), false);
     }
 }

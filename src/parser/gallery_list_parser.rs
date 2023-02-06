@@ -482,16 +482,16 @@ mod tests {
 
     #[test]
     fn parse_gallery_info_test() {
-        let document = read_test_file("gallery_list_parser_minimal");
+        let document = read_test_file("gallery_list_minimal.html");
         let result = GalleryList::parse(&document);
 
-        let document = read_test_file("gallery_list_parser_compact");
+        let document = read_test_file("gallery_list_compact.html");
         let result = GalleryList::parse(&document);
 
-        let document = read_test_file("gallery_list_parser_extended");
+        let document = read_test_file("gallery_list_extended.html");
         let result = GalleryList::parse(&document);
 
-        let document = read_test_file("gallery_list_parser_thumbnail");
+        let document = read_test_file("gallery_list_thumbnail.html");
         let result = GalleryList::parse(&document);
     }
 }

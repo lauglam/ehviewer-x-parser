@@ -39,7 +39,7 @@ mod tests {
 
     #[test]
     fn forums_parse_test() {
-        let document = read_test_file("profile_parser");
+        let document = read_test_file("profile.html");
 
         assert_eq!(Profile::parse(&document).unwrap(), Profile {
             display_name: String::from(r#"xxxx"#),

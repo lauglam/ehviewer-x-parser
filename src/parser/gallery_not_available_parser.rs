@@ -27,7 +27,7 @@ mod tests {
 
     #[test]
     fn parse_test() {
-        let document = read_test_file("gallery_not_available_parser");
+        let document = read_test_file("gallery_not_available.html");
         assert_eq!(GalleryNotAvailable::parse(&document).unwrap(), GalleryNotAvailable {
             error: String::from("This gallery has been removed or is unavailable.")
         })

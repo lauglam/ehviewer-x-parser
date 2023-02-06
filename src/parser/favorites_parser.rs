@@ -48,7 +48,7 @@ mod tests {
 
     #[test]
     fn sign_in_required_test() {
-        let document = read_test_file("sign_in_required");
+        let document = read_test_file("sign_in_required.html");
         let result = parse(&document);
         assert_eq!(result, Err(String::from("This page requires you to log on.")));
     }

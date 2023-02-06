@@ -48,13 +48,13 @@ mod tests {
 
     #[test]
     fn parse_test() {
-        let document = read_test_file("sign_in_parser_error");
+        let document = read_test_file("sign_in_error.html");
         assert_eq!(SignIn::parse(&document).unwrap(), SignIn {
             username_opt: None,
             error_opt: Some(String::from("The captcha was not entered correctly. Please try again.")),
         });
 
-        let document = read_test_file("sign_in_parser_success");
+        let document = read_test_file("sign_in_success.html");
         assert_eq!(SignIn::parse(&document).unwrap().username_opt.is_some(), true);
     }
 }
