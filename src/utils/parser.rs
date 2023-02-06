@@ -35,6 +35,16 @@ pub fn parse_isize(str: &str, or_else: isize) -> isize {
 }
 
 #[inline]
+pub fn parse_u32(str: &str, or_else: u32) -> u32 {
+    trim(str).parse::<u32>().unwrap_or(or_else)
+}
+
+#[inline]
+pub fn parse_i32(str: &str, or_else: i32) -> i32 {
+    trim(str).parse::<i32>().unwrap_or(or_else)
+}
+
+#[inline]
 pub fn parse_u64(str: &str, or_else: u64) -> u64 {
     trim(str).parse::<u64>().unwrap_or(or_else)
 }

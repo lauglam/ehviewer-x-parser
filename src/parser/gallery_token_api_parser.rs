@@ -1,34 +1,79 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct Token {
-    gid: i64,
+    gid: u64,
     token: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct GalleryToken {
     #[serde(alias = r#"tokenlist"#)]
-    token_vec: Option<Vec<Token>>,
-    error: String,
+    token_vec_opt: Option<Vec<Token>>,
+    #[serde(alias = r#"error"#)]
+    error_opt: Option<String>,
 }
 
-/// ```json
-/// {
-///     "tokenlist": [
-///         {
-///             "gid": 618395,
-///             "token": "0439fa3666"
-///         }
-///     ],
-///     "error": "maomao is moe~"
-/// }
-/// ```
-pub fn parse(json: &str) -> Result<String, String> {
-    let gallery_token: GalleryToken = serde_json::from_str(json).unwrap();
-    if let Some(token_vec) = gallery_token.token_vec {
-        Ok(String::from(&token_vec[0].token))
-    } else {
-        Err(gallery_token.error)
+impl GalleryToken {
+    /// ```json
+    /// {
+    ///     "tokenlist": [
+    ///         {
+    ///             "gid": 2062874,
+    ///             "token": "03037d8698"
+    ///         }
+    ///     ]
+    /// }
+    /// ```
+    /// Or
+    /// ```json
+    /// {
+    ///     "error": "maomao is moe~"
+    /// }
+    /// ```
+    pub fn parse(json: &str) -> Result<GalleryToken, String> {
+        if let Ok(gallery_token) = serde_json::from_str::<GalleryToken>(json) {
+            Ok(gallery_token)
+        } else {
+            Err(String::from("Parses gallery token api fail."))
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_test() {
+        let json = r#"
+            {
+                "tokenlist": [
+                    {
+                        "gid": 2062874,
+                        "token": "03037d8698"
+                    }
+                ]
+            }
+            "#;
+
+        assert_eq!(GalleryToken::parse(json).unwrap(), GalleryToken {
+            token_vec_opt: Some(vec![Token {
+                gid: 2062874,
+                token: String::from("03037d8698"),
+            }]),
+            error_opt: None,
+        });
+
+        let json = r#"
+            {
+                "error": "maomao is moe~"
+            }
+            "#;
+
+        assert_eq!(GalleryToken::parse(json).unwrap(), GalleryToken {
+            token_vec_opt: None,
+            error_opt: Some(String::from(r#"maomao is moe~"#)),
+        });
     }
 }
