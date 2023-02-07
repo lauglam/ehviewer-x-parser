@@ -19,21 +19,16 @@ impl GalleryPageUrl {
         const URL_PATTERN: &str = r#"([0-9a-f]{10})/(\d+)-(\d+)"#;
 
         let regex = Regex::new(if strict { URL_STRICT_PATTERN } else { URL_PATTERN }).unwrap();
-        if let Some(cap) = regex.captures(url) {
-            let p_token = String::from(&cap[1]);
-            let gid = parse_u64(&cap[2])?;
-            let page = parse_u32(&cap[3])?;
+        let captures = regex.captures(url).ok_or(String::from("parses gallery page url fail."))?;
+        let p_token = String::from(&captures[1]);
+        let gid = parse_u64(&captures[2])?;
+        let page = parse_u32(&captures[3])?;
 
-            if gid > 0 && page > 0 {
-                return Ok(GalleryPageUrl {
-                    gid,
-                    p_token,
-                    page,
-                });
-            }
-        }
-
-        Err(String::from("parses gallery page url fail."))
+        Ok(GalleryPageUrl {
+            gid,
+            p_token,
+            page,
+        })
     }
 }
 
