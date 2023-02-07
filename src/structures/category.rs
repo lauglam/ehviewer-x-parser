@@ -2,6 +2,7 @@ use std::sync::Mutex;
 use once_cell::sync::Lazy;
 use crate::eh_config;
 
+#[derive(Debug, PartialEq)]
 pub struct Category {
     pub color: u32,
     pub string: String,

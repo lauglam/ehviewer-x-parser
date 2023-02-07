@@ -9,7 +9,6 @@ pub struct GalleryPageApi {
     pub origin_image_url: String,
 }
 
-
 impl GalleryPageApi {
     pub fn parse(json: &str) -> Result<GalleryPageApi, String> {
         parse_internal(json).ok_or(String::from("parses gallery page api fail."))

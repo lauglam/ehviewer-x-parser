@@ -1,6 +1,7 @@
 use visdom::Vis;
 
 #[deprecated]
+#[derive(Debug, PartialEq)]
 pub struct EventPane {
     pub value: String,
 }

@@ -1,11 +1,13 @@
 use regex::Regex;
 use crate::utils::unescape;
 
+#[derive(Debug, PartialEq)]
 pub struct Archive {
     pub or: String,
     pub items: Vec<Item>,
 }
 
+#[derive(Debug, PartialEq)]
 pub struct Item {
     pub res: String,
     pub name: String,
