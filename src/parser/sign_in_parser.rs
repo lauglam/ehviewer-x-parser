@@ -35,7 +35,7 @@ impl SignIn {
                     error_opt,
                 })
             } else {
-                Err(String::from("Parses sign in fail."))
+                Err(String::from("parses sign in fail."))
             }
         }
     }

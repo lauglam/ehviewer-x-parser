@@ -24,7 +24,7 @@ impl VoteComment {
         if let Ok(vote_comment) = serde_json::from_str(json) {
             Ok(vote_comment)
         } else {
-            Err(String::from("Parses vote comment fail."))
+            Err(String::from("parses vote comment fail."))
         }
     }
 }

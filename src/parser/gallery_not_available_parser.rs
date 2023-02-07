@@ -15,7 +15,7 @@ impl GalleryNotAvailable {
                 error,
             })
         } else {
-            Err(String::from("Parses gallery not available fail."))
+            Err(String::from("parses gallery not available fail."))
         }
     }
 }

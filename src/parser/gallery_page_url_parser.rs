@@ -1,7 +1,10 @@
 use regex::Regex;
 use crate::const_concat;
 use crate::eh_url;
-use crate::utils::{parse_u32, parse_u64};
+use crate::utils::{
+    parse_u32,
+    parse_u64,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryPageUrl {
@@ -18,8 +21,8 @@ impl GalleryPageUrl {
         let regex = Regex::new(if strict { URL_STRICT_PATTERN } else { URL_PATTERN }).unwrap();
         if let Some(cap) = regex.captures(url) {
             let p_token = String::from(&cap[1]);
-            let gid = parse_u64(&cap[2], 0);
-            let page = parse_u32(&cap[3], 0);
+            let gid = parse_u64(&cap[2])?;
+            let page = parse_u32(&cap[3])?;
 
             if gid > 0 && page > 0 {
                 return Ok(GalleryPageUrl {
@@ -30,7 +33,7 @@ impl GalleryPageUrl {
             }
         }
 
-        Err(String::from("Parses gallery page url fail."))
+        Err(String::from("parses gallery page url fail."))
     }
 }
 

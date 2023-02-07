@@ -72,25 +72,25 @@ pub const LAYOUT_MODE_LIST: &str = "l";
  */
 pub const LAYOUT_MODE_THUMB: &str = "t";
 
-pub const MISC: usize = 0x1;
-pub const DOUJINSHI: usize = 0x2;
-pub const MANGA: usize = 0x4;
-pub const ARTIST_CG: usize = 0x8;
-pub const GAME_CG: usize = 0x10;
-pub const IMAGE_SET: usize = 0x20;
-pub const COSPLAY: usize = 0x40;
-pub const ASIAN_PORN: usize = 0x80;
-pub const NON_H: usize = 0x100;
-pub const WESTERN: usize = 0x200;
-pub const ALL_CATEGORY: usize = 0x3ff;
-pub const NAMESPACES_RECLASS: usize = 0x1;
-pub const NAMESPACES_LANGUAGE: usize = 0x2;
-pub const NAMESPACES_PARODY: usize = 0x4;
-pub const NAMESPACES_CHARACTER: usize = 0x8;
-pub const NAMESPACES_GROUP: usize = 0x10;
-pub const NAMESPACES_ARTIST: usize = 0x20;
-pub const NAMESPACES_MALE: usize = 0x40;
-pub const NAMESPACES_FEMALE: usize = 0x80;
+pub const MISC: u32 = 0x1;
+pub const DOUJINSHI: u32 = 0x2;
+pub const MANGA: u32 = 0x4;
+pub const ARTIST_CG: u32 = 0x8;
+pub const GAME_CG: u32 = 0x10;
+pub const IMAGE_SET: u32 = 0x20;
+pub const COSPLAY: u32 = 0x40;
+pub const ASIAN_PORN: u32 = 0x80;
+pub const NON_H: u32 = 0x100;
+pub const WESTERN: u32 = 0x200;
+pub const ALL_CATEGORY: u32 = 0x3ff;
+pub const NAMESPACES_RECLASS: u32 = 0x1;
+pub const NAMESPACES_LANGUAGE: u32 = 0x2;
+pub const NAMESPACES_PARODY: u32 = 0x4;
+pub const NAMESPACES_CHARACTER: u32 = 0x8;
+pub const NAMESPACES_GROUP: u32 = 0x10;
+pub const NAMESPACES_ARTIST: u32 = 0x20;
+pub const NAMESPACES_MALE: u32 = 0x40;
+pub const NAMESPACES_FEMALE: u32 = 0x80;
 
 pub const JAPANESE_ORIGINAL: &str = "0";
 pub const JAPANESE_TRANSLATED: &str = "1024";
@@ -323,14 +323,14 @@ pub static imageSize: Lazy<Mutex<&str>> = Lazy::new(|| Mutex::new(IMAGE_SIZE_AUT
  * key: {@link #KEY_SCALE_WIDTH}<br/>
  * value: 0 for no limit
  */
-pub static scaleWidth: Lazy<Mutex<usize>> = Lazy::new(|| Mutex::new(0));
+pub static scaleWidth: Lazy<Mutex<u32>> = Lazy::new(|| Mutex::new(0));
 
 /**
  * Scale height<br/>
  * key: {@link #KEY_SCALE_HEIGHT}<br/>
  * value: 0 for no limit
  */
-pub static scaleHeight: Lazy<Mutex<usize>> = Lazy::new(|| Mutex::new(0));
+pub static scaleHeight: Lazy<Mutex<u32>> = Lazy::new(|| Mutex::new(0));
 
 /**
  * Gallery title<br/>
@@ -368,7 +368,7 @@ pub static popular: Lazy<Mutex<&str>> = Lazy::new(|| Mutex::new(POPULAR_YES));
  * value: the value of categories, for multiple use & operation,
  * 0 for none
  */
-pub static defaultCategories: Lazy<Mutex<usize>> = Lazy::new(|| Mutex::new(0));
+pub static defaultCategories: Lazy<Mutex<u32>> = Lazy::new(|| Mutex::new(0));
 
 /**
  * <br/>
@@ -383,7 +383,7 @@ pub static favoritesSort: Lazy<Mutex<&str>> = Lazy::new(|| Mutex::new(FAVORITES_
  * value: the value of namespaces, for multiple use & operation,
  * 0 for none
  */
-pub static excludedNamespaces: Lazy<Mutex<usize>> = Lazy::new(|| Mutex::new(0));
+pub static excludedNamespaces: Lazy<Mutex<u32>> = Lazy::new(|| Mutex::new(0));
 
 /**
  * Certain languages excluded from list and searches<br/>

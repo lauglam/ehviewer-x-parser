@@ -1,5 +1,5 @@
 use regex::Regex;
-use crate::utils::unescape_xml;
+use crate::utils::unescape;
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryPage {
@@ -14,7 +14,7 @@ impl GalleryPage {
         if let Some(gallery_page) = parse_internal(document) {
             Ok(gallery_page)
         } else {
-            Err(String::from("Parses gallery page fail."))
+            Err(String::from("parses gallery page fail."))
         }
     }
 }
@@ -36,7 +36,7 @@ fn parse_internal(document: &str) -> Option<GalleryPage> {
 
     let regex = Regex::new(PATTERN_ORIGIN_IMAGE_URL).unwrap();
     let captures = regex.captures(document)?;
-    let origin_image_url = format!("{}{}{}", &captures[1], r#"fullimg.php"#, unescape_xml(&captures[2]));
+    let origin_image_url = format!("{}{}{}", &captures[1], r#"fullimg.php"#, unescape(&captures[2]));
 
     let regex = Regex::new(PATTERN_SHOW_KEY).unwrap();
     let captures = regex.captures(document)?;

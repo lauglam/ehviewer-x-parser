@@ -6,6 +6,6 @@ pub fn parse(document: &str) -> Result<String, String> {
         let event = root.find("#eventpane");
         Ok(event.outer_htmls())
     } else {
-        Err(String::from("Parses event pane fail."))
+        Err(String::from("parses event pane fail."))
     }
 }

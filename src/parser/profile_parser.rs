@@ -27,7 +27,7 @@ impl Profile {
             }
         }
 
-        Err(String::from("Parses profile fail."))
+        Err(String::from("parses profile fail."))
     }
 }
 

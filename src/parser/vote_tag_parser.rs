@@ -15,7 +15,7 @@ impl VoteTag {
         if let Ok(vote_tag) = serde_json::from_str::<VoteTag>(json) {
             Ok(vote_tag)
         } else {
-            Err(String::from("Parses vote tag fail."))
+            Err(String::from("parses vote tag fail."))
         }
     }
 }

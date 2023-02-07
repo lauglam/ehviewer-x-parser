@@ -35,11 +35,11 @@ impl GalleryDetail {
         const PINING_STRING: &str = "<p>This gallery is pining for the fjords.</p>";
 
         if document.contains(OFFENSIVE_STRING) {
-            return Err(String::from("And if you choose to ignore this warning, you lose all rights to complain about it in the future."));
+            return Err(String::from("if you choose to ignore this warning, you lose all rights to complain about it in the future."));
         }
 
         if document.contains(PINING_STRING) {
-            return Err(String::from("This gallery is pining for the fjords."));
+            return Err(String::from("this gallery is pining for the fjords."));
         }
 
         // Error info.
@@ -83,7 +83,7 @@ impl GalleryTagGroup {
             }
         }
 
-        Err(String::from("Parse gallery tag group fail."))
+        Err(String::from("parses gallery tag group fail."))
     }
 
     pub fn size(&self) -> usize {

@@ -20,7 +20,7 @@ impl Torrent {
                 download_url,
             })
         } else {
-            Err(String::from("Parses torrent fail."))
+            Err(String::from("parses torrent fail."))
         }
     }
 }

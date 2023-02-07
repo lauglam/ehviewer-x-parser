@@ -25,7 +25,7 @@ impl Forum {
             }
         }
 
-        Err(String::from("Parses forums fail."))
+        Err(String::from("parses forums fail."))
     }
 }
 

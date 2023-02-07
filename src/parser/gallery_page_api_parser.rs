@@ -1,6 +1,6 @@
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use crate::utils::unescape_xml;
+use crate::utils::unescape;
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryPageApi {
@@ -15,7 +15,7 @@ impl GalleryPageApi {
         if let Some(gallery_page_api) = parse_internal(json) {
             Ok(gallery_page_api)
         } else {
-            Err(String::from("Parses gallery page api fail."))
+            Err(String::from("parses gallery page api fail."))
         }
     }
 }
@@ -43,7 +43,7 @@ fn parse_internal(json: &str) -> Option<GalleryPageApi> {
 
         let regex = Regex::new(PATTERN_ORIGIN_IMAGE_URL).unwrap();
         let captures = regex.captures(&internal.i7)?;
-        let origin_image_url = format!("{}{}{}", &captures[1], r#"fullimg.php"#, unescape_xml(&captures[2]));
+        let origin_image_url = format!("{}{}{}", &captures[1], r#"fullimg.php"#, unescape(&captures[2]));
 
         return Some(GalleryPageApi {
             image_url,

@@ -1,10 +1,14 @@
 #![allow(dead_code)]
 
+use core::f32;
 use regex::Regex;
 use visdom::types::Elements;
 use visdom::Vis;
 use crate::parser::category_parser::Category;
-use crate::utils::{parse_isize, parse_usize};
+use crate::utils::{
+    parse_i32,
+    parse_u32,
+};
 use crate::parser::gallery_detail_url_parser::GalleryDetailUrl;
 
 #[derive(Debug, PartialEq)]
@@ -14,17 +18,17 @@ pub struct GalleryInfo {
     pub title: String,
     pub title_jpn_opt: Option<String>,
     pub thumb: String,
-    pub thumb_width: usize,
-    pub thumb_height: usize,
-    pub category: usize,
+    pub thumb_width: u32,
+    pub thumb_height: u32,
+    pub category: u32,
     pub posted: String,
     pub uploader_opt: Option<String>,
     pub rating: f32,
     pub simple_tag_vec_opt: Option<Vec<String>>,
-    pub pages: usize,
+    pub pages: u32,
     pub simple_language_opt: Option<String>,
     pub favorite_name_opt: Option<String>,
-    pub favorite_slot: isize,
+    pub favorite_slot: i32,
 }
 
 impl GalleryInfo {
@@ -126,8 +130,8 @@ impl GalleryInfo {
                 let regex = Regex::new(PATTERN_THUMB_SIZE).unwrap();
                 let captures = regex.captures(&style).unwrap();
 
-                thumb_height = parse_usize(&captures[1], 0);
-                thumb_width = parse_usize(&captures[2], 0);
+                thumb_height = parse_u32(&captures[1])?;
+                thumb_width = parse_u32(&captures[2])?;
 
                 // TODO setting
                 let src = img.attr("src").unwrap().to_string();
@@ -138,7 +142,7 @@ impl GalleryInfo {
                 let regex = Regex::new(PATTERN_PAGES).unwrap();
                 let captures = regex.captures(&pages_str).unwrap();
 
-                pages = parse_usize(&captures[1], 0);
+                pages = parse_u32(&captures[1])?;
 
                 // Rating.
                 let style = ir.attr("style").unwrap();
@@ -209,7 +213,7 @@ impl GalleryInfo {
                 favorite_name_opt: None,
             })
         } else {
-            Err(String::from("Parses gallery info fail."))
+            Err(String::from("parses gallery info fail."))
         }
     }
 
@@ -324,7 +328,7 @@ impl Inline {
             // Thumbnail.
             Ok(Inline::Thumbnail)
         } else {
-            Err(String::from("Parses inline fail."))
+            Err(String::from("parses inline fail."))
         }
     }
 }
@@ -390,7 +394,7 @@ impl GalleryList {
                 gallery_info_vec,
             })
         } else {
-            Err(String::from("Parses gallery list fail."))
+            Err(String::from("parses gallery list fail."))
         }
     }
 }
@@ -403,20 +407,20 @@ fn parse_rating(rating_style: &str) -> Result<f32, String> {
     const PATTERN_RATING: &str = r#"\d+px"#;
 
     let reg = Regex::new(PATTERN_RATING).unwrap();
-    let mut n1 = isize::MIN;
-    let mut n2 = isize::MIN;
+    let mut n1 = i32::MIN;
+    let mut n2 = i32::MIN;
 
     let mut rate = 5 as f32;
     let mut ms = reg.find_iter(rating_style);
     if let Some(m) = ms.next() {
-        n1 = parse_isize(&m.as_str().replace("px", ""), 0);
+        n1 = parse_i32(&m.as_str().replace("px", ""))?;
     }
 
     if let Some(m) = ms.next() {
-        n2 = parse_isize(&m.as_str().replace("px", ""), 0);
+        n2 = parse_i32(&m.as_str().replace("px", ""))?;
     }
 
-    if n1 != isize::MIN && n2 != isize::MIN {
+    if n1 != i32::MIN && n2 != i32::MIN {
         rate -= (n1 / 16) as f32;
         if n2 == 21 {
             rate -= 0.5 as f32;
@@ -424,11 +428,11 @@ fn parse_rating(rating_style: &str) -> Result<f32, String> {
 
         Ok(rate)
     } else {
-        Err(String::from("Parses gallery info rating fail."))
+        Err(String::from("parses gallery info rating fail."))
     }
 }
 
-fn parse_favorite_slot(style: &str) -> isize {
+fn parse_favorite_slot(style: &str) -> i32 {
     const PATTERN_FAVORITE_SLOT: &str = r#"background-color:rgba\((\d+),(\d+),(\d+),"#;
     let reg = Regex::new(PATTERN_FAVORITE_SLOT).unwrap();
 

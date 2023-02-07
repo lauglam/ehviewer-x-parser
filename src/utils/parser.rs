@@ -1,10 +1,10 @@
 use std::borrow::Cow;
 
-const ESCAPE_CHARACTER_LIST: [&str; 7] = ["&amp;", "&lt;", "&gt;", "&quot;", "&#039;", "&times;", "&nbsp;"];
-const UNESCAPE_CHARACTER_LIST: [&str; 7] = ["&", "<", ">", "\"", "'", "×", " "];
-
 #[inline]
-pub fn unescape_xml(str: &str) -> Cow<str> {
+pub fn unescape(str: &str) -> Cow<str> {
+    const ESCAPE_CHARACTER_LIST: [&str; 7] = ["&amp;", "&lt;", "&gt;", "&quot;", "&#039;", "&times;", "&nbsp;"];
+    const UNESCAPE_CHARACTER_LIST: [&str; 7] = ["&", "<", ">", "\"", "'", "×", " "];
+
     let mut result = Cow::Borrowed(str);
     let idx_opt = ESCAPE_CHARACTER_LIST.iter()
         .position(|&escape| str.contains(escape));
@@ -18,45 +18,34 @@ pub fn unescape_xml(str: &str) -> Cow<str> {
 
 #[inline]
 pub fn trim(str: &str) -> Cow<str> {
-    match unescape_xml(str) {
+    match unescape(str) {
         Cow::Borrowed(str) => Cow::Borrowed(str.trim()),
         Cow::Owned(str) => Cow::Owned(String::from(str.trim())),
     }
 }
 
 #[inline]
-pub fn parse_usize(str: &str, or_else: usize) -> usize {
-    trim(str).parse::<usize>().unwrap_or(or_else)
+pub fn parse_u32(str: &str) -> Result<u32, String> {
+    trim(str).parse::<u32>()
+        .map_err(|e| format!("{}: {}", e.to_string(), str))
 }
 
 #[inline]
-pub fn parse_isize(str: &str, or_else: isize) -> isize {
-    trim(str).parse::<isize>().unwrap_or(or_else)
+pub fn parse_i32(str: &str) -> Result<i32, String> {
+    trim(str).parse::<i32>()
+        .map_err(|e| format!("{}: {}", e.to_string(), str))
 }
 
 #[inline]
-pub fn parse_u32(str: &str, or_else: u32) -> u32 {
-    trim(str).parse::<u32>().unwrap_or(or_else)
+pub fn parse_u64(str: &str) -> Result<u64, String> {
+    trim(str).parse::<u64>()
+        .map_err(|e| format!("{}: {}", e.to_string(), str))
 }
 
 #[inline]
-pub fn parse_i32(str: &str, or_else: i32) -> i32 {
-    trim(str).parse::<i32>().unwrap_or(or_else)
-}
-
-#[inline]
-pub fn parse_u64(str: &str, or_else: u64) -> u64 {
-    trim(str).parse::<u64>().unwrap_or(or_else)
-}
-
-#[inline]
-pub fn parse_i64(str: &str, or_else: i64) -> i64 {
-    trim(str).parse::<i64>().unwrap_or(or_else)
-}
-
-#[inline]
-pub fn parse_f32(str: &str, or_else: f32) -> f32 {
-    trim(str).parse::<f32>().unwrap_or(or_else)
+pub fn parse_f32(str: &str) -> Result<f32, String> {
+    trim(str).parse::<f32>()
+        .map_err(|e| format!("{}: {}", e.to_string(), str))
 }
 
 #[cfg(test)]
@@ -65,11 +54,11 @@ mod tests {
     use rand::Rng;
 
     #[test]
-    fn unescape_xml_test() {
+    fn unescape_test() {
         let r = generate_range();
         let input = &ESCAPE_CHARACTER_LIST[r.0..r.1].join("");
 
-        assert_eq!(&unescape_xml(input), &UNESCAPE_CHARACTER_LIST[r.0..r.1].join(""));
+        assert_eq!(&unescape(input), &UNESCAPE_CHARACTER_LIST[r.0..r.1].join(""));
     }
 
     #[test]
@@ -87,4 +76,7 @@ mod tests {
 
         (start, end)
     }
+
+    const ESCAPE_CHARACTER_LIST: [&str; 7] = ["&amp;", "&lt;", "&gt;", "&quot;", "&#039;", "&times;", "&nbsp;"];
+    const UNESCAPE_CHARACTER_LIST: [&str; 7] = ["&", "<", ">", "\"", "'", "×", " "];
 }

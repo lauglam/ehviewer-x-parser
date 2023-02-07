@@ -35,7 +35,7 @@ impl GalleryToken {
         if let Ok(gallery_token) = serde_json::from_str::<GalleryToken>(json) {
             Ok(gallery_token)
         } else {
-            Err(String::from("Parses gallery token api fail."))
+            Err(String::from("parses gallery token api fail."))
         }
     }
 }

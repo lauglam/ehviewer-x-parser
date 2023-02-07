@@ -13,7 +13,7 @@ impl RateGallery {
         if let Ok(rate_gallery) = serde_json::from_str::<RateGallery>(json) {
             Ok(rate_gallery)
         } else {
-            Err(String::from("Parses rate gallery fail."))
+            Err(String::from("parses rate gallery fail."))
         }
     }
 }

@@ -16,7 +16,7 @@ impl GalleryDetailUrl {
         let regex = Regex::new(if strict { URL_STRICT_PATTERN } else { URL_PATTERN }).unwrap();
         if regex.is_match(url) {
             let cap = regex.captures(url).unwrap();
-            let gid = parse_u64(&cap[1], 0 as u64);
+            let gid = parse_u64(&cap[1])?;
             let token = String::from(&cap[2]);
 
             if gid > 0 {
@@ -27,7 +27,7 @@ impl GalleryDetailUrl {
             }
         }
 
-        Err(String::from("Parses gallery detail url fail."))
+        Err(String::from("parses gallery detail url fail."))
     }
 }
 

@@ -1,5 +1,5 @@
 use regex::Regex;
-use crate::utils::unescape_xml;
+use crate::utils::unescape;
 
 pub struct Archive {
     pub or: String,
@@ -25,8 +25,8 @@ pub fn parse(document: &str) -> Option<Archive> {
             let mut items = Vec::new();
 
             for cap in archive_reg.captures_iter(document) {
-                let res = unescape_xml(&cap[1]).into_owned();
-                let name = unescape_xml(&cap[2]).into_owned();
+                let res = unescape(&cap[1]).into_owned();
+                let name = unescape(&cap[2]).into_owned();
 
                 items.push(Item {
                     res,

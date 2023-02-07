@@ -181,7 +181,7 @@ impl Input {
     #[allow(dead_code)]
     pub fn get_char(&self, cursor: usize) -> Result<char, String> {
         if self.input.len() <= cursor {
-            return Err(String::from("Out of input."));
+            return Err(String::from("out of input."));
         }
 
         Ok(self.input[cursor])
@@ -190,11 +190,11 @@ impl Input {
     /// Returns from `bgn` to `end` as a String.
     pub fn get_string(&self, bgn: usize, end: usize) -> Result<String, String> {
         if end <= bgn {
-            return Err(String::from("Invalid range."));
+            return Err(String::from("invalid range."));
         }
 
         if self.input.len() <= end {
-            return Err(format!("Out of input {:?}:{:?}.", bgn, end));
+            return Err(format!("out of input {:?}:{:?}.", bgn, end));
         }
 
         let mut s = String::new();

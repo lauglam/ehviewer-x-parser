@@ -21,7 +21,7 @@ impl GalleryMultiPageViewerPToken {
                 image_vec,
             })
         } else {
-            Err(String::from("Parses gallery multi page viewer ptoekn fail."))
+            Err(String::from("parses gallery multi page viewer ptoekn fail."))
         }
     }
 }
