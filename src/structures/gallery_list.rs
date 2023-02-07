@@ -17,7 +17,6 @@ pub struct GalleryInfo {
     pub gid: u64,
     pub token: String,
     pub title: String,
-    pub title_jpn_opt: Option<String>,
     pub thumb: String,
     pub thumb_width: u32,
     pub thumb_height: u32,
@@ -28,6 +27,7 @@ pub struct GalleryInfo {
     pub simple_tag_vec_opt: Option<Vec<String>>,
     pub pages: u32,
     pub simple_language_opt: Option<String>,
+    pub is_favorited: bool,
     pub favorite_slot_opt: Option<u32>,
     pub favorite_name_opt: Option<String>,
 }
@@ -139,15 +139,23 @@ impl GalleryInfo {
             parse_rating(&style.to_string())
         })()?;
 
-        // posted, favorite_slot
-        let (posted, favorite_slot_opt) = (|| -> Result<(String, Option<u32>), String>{
+        // posted, is_favorited, favorite_slot, favorite_name_opt
+        let (posted, is_favorited, favorite_slot_opt, favorite_name_opt) = (|| -> Result<(String, bool, Option<u32>, Option<String>), String>{
             let posted = root.find(&format!("#posted_{}", gid));
-            let favorite_slot_opt = if let Some(slot) = posted.attr("style") {
-                Some(FavoriteSlot::parse(&slot.to_string())?.value)
+
+            let (is_favorited, favorite_slot_opt) = if let Some(slot) = posted.attr("style") {
+                (true, Some(FavoriteSlot::parse(&slot.to_string())?.value))
+            } else {
+                (false, None)
+            };
+
+            let favorite_name_opt = if let Some(title) = posted.attr("title") {
+                Some(title.to_string())
             } else {
                 None
             };
-            Ok((posted.text(), favorite_slot_opt))
+
+            Ok((posted.text(), is_favorited, favorite_slot_opt, favorite_name_opt))
         })()?;
 
         // uploader_opt
@@ -204,30 +212,12 @@ impl GalleryInfo {
             posted,
             category,
             uploader_opt,
+            is_favorited,
             favorite_slot_opt,
+            favorite_name_opt,
             simple_tag_vec_opt,
             simple_language_opt,
-            title_jpn_opt: None,
-            favorite_name_opt: None,
         })
-    }
-
-    pub fn available_title(&self) -> &str {
-        if let Some(ref title_jpn) = self.title_jpn_opt {
-            title_jpn
-        } else {
-            self.title.as_ref()
-        }
-    }
-}
-
-impl ToString for GalleryInfo {
-    fn to_string(&self) -> String {
-        if let Some(ref title_jpn) = self.title_jpn_opt {
-            format!("{} {}", self.gid, title_jpn)
-        } else {
-            format!("{} {}", self.gid, self.title)
-        }
     }
 }
 
