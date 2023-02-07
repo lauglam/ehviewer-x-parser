@@ -11,17 +11,15 @@ impl Torrent {
         const PATTERN_TORRENT: &str = r#"<td colspan="5"> &nbsp; <a href=".*" onclick="document.location='([^"]+)'[^<]+>([^<]+)</a></td>"#;
 
         let regex = Regex::new(PATTERN_TORRENT).unwrap();
-        if let Some(cap) = regex.captures(element) {
-            let download_url = String::from(&cap[1]);
-            let filename = String::from(&cap[2]);
+        let captures = regex.captures(element).ok_or(String::from("parses torrent fail."))?;
 
-            Ok(Torrent {
-                filename,
-                download_url,
-            })
-        } else {
-            Err(String::from("parses torrent fail."))
-        }
+        let download_url = String::from(&captures[1]);
+        let filename = String::from(&captures[2]);
+
+        Ok(Torrent {
+            filename,
+            download_url,
+        })
     }
 }
 
@@ -37,9 +35,9 @@ mod tests {
             </tr>
             "#;
 
-        assert_eq!(Torrent::parse(element).unwrap(),Torrent{
-            filename:String::from("xxxx.zip"),
-            download_url:String::from("https://ehtracker.org/get/xxxx/xxxx.torrent?p=xxxx")
+        assert_eq!(Torrent::parse(element).unwrap(), Torrent {
+            filename: String::from("xxxx.zip"),
+            download_url: String::from("https://ehtracker.org/get/xxxx/xxxx.torrent?p=xxxx"),
         });
     }
 }

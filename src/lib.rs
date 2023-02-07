@@ -1,5 +1,5 @@
 pub mod utils;
-pub mod parser;
+pub mod structures;
 
 mod eh_url;
 mod eh_config;

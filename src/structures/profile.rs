@@ -8,8 +8,8 @@ pub struct Profile {
 }
 
 impl Profile {
-    pub fn parse(document: &str) -> Result<Profile, String> {
-        if let Ok(root) = Vis::load(document) {
+    pub fn parse(doc: &str) -> Result<Profile, String> {
+        if let Ok(root) = Vis::load(doc) {
             let display_name = root.find("#profilename > font");
             let display_name = display_name.text();
 
@@ -39,9 +39,9 @@ mod tests {
 
     #[test]
     fn forums_parse_test() {
-        let document = read_test_file("profile.html");
+        let doc = read_test_file("profile.html");
 
-        assert_eq!(Profile::parse(&document).unwrap(), Profile {
+        assert_eq!(Profile::parse(&doc).unwrap(), Profile {
             display_name: String::from(r#"xxxx"#),
             avatar: format!("{}{}", eh_url::URL_FORUMS, "style_images/ambience/warn0.gif"),
         });

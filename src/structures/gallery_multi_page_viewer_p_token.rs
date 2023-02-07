@@ -6,10 +6,10 @@ pub struct GalleryMultiPageViewerPToken {
 }
 
 impl GalleryMultiPageViewerPToken {
-    pub fn parse(document: &str) -> Result<GalleryMultiPageViewerPToken, String> {
+    pub fn parse(doc: &str) -> Result<GalleryMultiPageViewerPToken, String> {
         let prefix = r#"var imagelist = "#;
 
-        let mut input = Input::new(document);
+        let mut input = Input::new(doc);
         let bgn = input.find_str(prefix).unwrap();
         input.set_cursor(bgn);
         let end = input.find(';').unwrap();
@@ -21,7 +21,7 @@ impl GalleryMultiPageViewerPToken {
                 image_vec,
             })
         } else {
-            Err(String::from("parses gallery multi page viewer ptoekn fail."))
+            Err(String::from("parses gallery multi page viewer ptoken fail."))
         }
     }
 }

@@ -21,10 +21,6 @@ impl VoteComment {
     /// }
     /// ```
     pub fn parse(json: &str) -> Result<VoteComment, String> {
-        if let Ok(vote_comment) = serde_json::from_str(json) {
-            Ok(vote_comment)
-        } else {
-            Err(String::from("parses vote comment fail."))
-        }
+        serde_json::from_str(json).map_err(|_| String::from("parses vote comment fail."))
     }
 }

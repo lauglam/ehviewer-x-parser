@@ -10,10 +10,6 @@ pub struct RateGallery {
 
 impl RateGallery {
     pub fn parse(json: &str) -> Result<RateGallery, String> {
-        if let Ok(rate_gallery) = serde_json::from_str::<RateGallery>(json) {
-            Ok(rate_gallery)
-        } else {
-            Err(String::from("parses rate gallery fail."))
-        }
+        serde_json::from_str::<RateGallery>(json).map_err(|_| String::from("parses rate gallery fail."))
     }
 }

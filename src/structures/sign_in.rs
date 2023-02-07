@@ -7,12 +7,12 @@ pub struct SignIn {
 }
 
 impl SignIn {
-    pub fn parse(document: &str) -> Result<SignIn, String> {
+    pub fn parse(doc: &str) -> Result<SignIn, String> {
         const NAME_PATTERN: &str = "<p>You are now logged in as: (.+?)<";
         const ERROR_PATTERN: &str = r#"(?:<h4>The error returned was:</h4>\s*<p>(.+?)</p>)|(?:<span class="postcolor">(.+?)</span>)"#;
 
         let regex = Regex::new(NAME_PATTERN).unwrap();
-        if let Some(cap) = regex.captures(document) {
+        if let Some(cap) = regex.captures(doc) {
             let username_opt = Some(String::from(&cap[1]));
 
             Ok(SignIn {
@@ -21,7 +21,7 @@ impl SignIn {
             })
         } else {
             let regex = Regex::new(ERROR_PATTERN).unwrap();
-            if let Some(cap) = regex.captures(document) {
+            if let Some(cap) = regex.captures(doc) {
                 let error_opt = Some(String::from(
                     if let Some(m) = cap.get(1) {
                         m.as_str()
@@ -48,13 +48,13 @@ mod tests {
 
     #[test]
     fn parse_test() {
-        let document = read_test_file("sign_in_error.html");
-        assert_eq!(SignIn::parse(&document).unwrap(), SignIn {
+        let doc = read_test_file("sign_in_error.html");
+        assert_eq!(SignIn::parse(&doc).unwrap(), SignIn {
             username_opt: None,
             error_opt: Some(String::from("The captcha was not entered correctly. Please try again.")),
         });
 
-        let document = read_test_file("sign_in_success.html");
-        assert_eq!(SignIn::parse(&document).unwrap().username_opt.is_some(), true);
+        let doc = read_test_file("sign_in_success.html");
+        assert_eq!(SignIn::parse(&doc).unwrap().username_opt.is_some(), true);
     }
 }

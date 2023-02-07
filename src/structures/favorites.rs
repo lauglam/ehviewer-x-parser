@@ -1,5 +1,4 @@
 use visdom::Vis;
-// use crate::gallery_info::GalleryInfo;
 use crate::utils::{parse_u32, trim};
 
 #[derive(Debug, PartialEq)]
@@ -13,14 +12,16 @@ pub struct Favorite {
     // pub gallery_info_vec: Vec<GalleryInfo>,
 }
 
-pub fn parse(document: &str) -> Result<Favorite, String> {
-    if document.contains("This page requires you to log on.</p>") {
-        Err(String::from("this page requires you to log on."))
-    } else {
+impl Favorite {
+    pub fn parse(doc: &str) -> Result<Self, String> {
+        if doc.contains("This page requires you to log on.</p>") {
+            return Err(String::from("this page requires you to log on."));
+        }
+
         let mut cat_vec = Vec::new();
         let mut count_vec = Vec::new();
 
-        if let Ok(root) = Vis::load(document) {
+        if let Ok(root) = Vis::load(doc) {
             let fps = root.find(".ido .fp");
 
             assert_eq!(fps.length(), 10);
@@ -28,7 +29,7 @@ pub fn parse(document: &str) -> Result<Favorite, String> {
                 let count = fp.child_nodes_item(0).unwrap();
                 let cat = fp.child_nodes_item(2).unwrap();
                 count_vec.push(parse_u32(&count.text()));
-                cat_vec.push(trim(&cat.text()).into_owned());
+                cat_vec.push(String::from(trim(&cat.text())));
             }
 
 
@@ -48,8 +49,8 @@ mod tests {
 
     #[test]
     fn sign_in_required_test() {
-        let document = read_test_file("sign_in_required.html");
-        let result = parse(&document);
+        let doc = read_test_file("sign_in_required.html");
+        let result = Favorite::parse(&doc);
         assert_eq!(result, Err(String::from("this page requires you to log on.")));
     }
 }

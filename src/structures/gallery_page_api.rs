@@ -12,11 +12,7 @@ pub struct GalleryPageApi {
 
 impl GalleryPageApi {
     pub fn parse(json: &str) -> Result<GalleryPageApi, String> {
-        if let Some(gallery_page_api) = parse_internal(json) {
-            Ok(gallery_page_api)
-        } else {
-            Err(String::from("parses gallery page api fail."))
-        }
+        parse_internal(json).ok_or(String::from("parses gallery page api fail."))
     }
 }
 
