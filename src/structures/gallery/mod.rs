@@ -5,3 +5,4 @@ mod inline;
 
 pub use gallery_info::GalleryInfo;
 pub use gallery_list::GalleryList;
+pub use inline::Inline;

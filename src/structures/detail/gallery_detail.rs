@@ -7,17 +7,11 @@ use crate::utils::{
     parse_u64,
     unescape,
 };
-use crate::structures::{
-    category::Category,
-    favorite_slot::FavoriteSlot,
-    gallery_tag_group::GalleryTagGroup,
-    gallery_detail_url::GalleryDetailUrl,
-};
-use crate::structures::detail::{
-    gallery_comment::GalleryComment,
-    gallery_preview_set::GalleryPreviewSet,
-    gallery_detail_detail::GalleryDetailDetail,
-};
+use crate::structures::{Category, FavoriteSlot, GalleryTagGroup, GalleryDetailUrl, detail::{
+    GalleryCommentList,
+    GalleryDetailDetail,
+    GalleryPreviewSet,
+}, GalleryTagGroupList};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryDetail {
@@ -35,7 +29,7 @@ pub struct GalleryDetail {
     pub favorite_slot_opt: Option<u32>,
     pub rating_count: u32,
     pub tag_group_vec: Vec<GalleryTagGroup>,
-    pub comment_vec: Vec<GalleryComment>,
+    pub comment_list: GalleryCommentList,
     pub preview_pages: u32,
     pub preview_set: GalleryPreviewSet,
     pub url: String,
@@ -67,8 +61,7 @@ impl GalleryDetail {
             return Err(String::from(&cap[1]));
         }
 
-
-        todo!();
+        parse_internal(doc).ok_or(String::from("parses gallery detail fail."))
     }
 }
 
@@ -78,6 +71,7 @@ fn parse_internal(doc: &str) -> Option<GalleryDetail> {
     const PATTERN_ARCHIVE: &str = r#"<a[^<>]*onclick="return popUp\('([^']+)'[^)]+\)">Archive Download</a>"#;
     const PATTERN_RATING: &str = r#"[+-]?([0-9]*[.]?[0-9]+)"#;
     const PATTERN_NEWER_DATE: &str = ", added (.+?)<br />";
+    const PATTERN_COVER: &str = r#"width:(\d+)px; height:(\d+)px.+?url\((.+?)\)"#;
 
     let regex = Regex::new(PATTERN_DETAIL).unwrap();
     let captures = regex.captures(doc)?;
@@ -99,8 +93,11 @@ fn parse_internal(doc: &str) -> Option<GalleryDetail> {
     let gm = root.find(".gm:not(#cdiv)");
 
     let cover = gm.find("#gd1 div:first-child");
-    let cover_style = cover.attr("style")?;
-    let thumb = parse_cover_style(&cover_style.to_string()).ok()?;
+    let style = cover.attr("style")?;
+    let style = style.to_string();
+    let regex = Regex::new(PATTERN_COVER).unwrap();
+    let captures = regex.captures(&style)?;
+    let thumb = String::from(&captures[3]);
 
     let gn = gm.find("#gn");
     let title = gn.text();
@@ -162,8 +159,29 @@ fn parse_internal(doc: &str) -> Option<GalleryDetail> {
         None
     };
 
-    let cdiv = root.find("#cdiv");
+    let c_div = root.find("#cdiv");
+    let comment_list = GalleryCommentList::parse(&c_div.outer_html()).ok()?;
 
+    let last_page = root.find(".ptt tr:nth-last-child(2)");
+    let preview_pages = parse_u32(&last_page.text()).ok()?;
+
+    let first_page = root.find(".ptt tr:nth-child(2)");
+    let href = first_page.attr("href")?;
+    let url = href.to_string();
+
+    let gdo4 = root.find("#gdo4");
+    let can_click = gdo4.children("[onclick]");
+
+    let gdt = root.find("#gdt");
+    let preview_set = match can_click.text().as_str() {
+        "Large" => GalleryPreviewSet::parse(&gdt.outer_html(), true).ok()?,
+        "Normal" => GalleryPreviewSet::parse(&gdt.outer_html(), false).ok()?,
+        _ => return None,
+    };
+
+    let tag_list = root.find("#taglist");
+    let tag_group_list = GalleryTagGroupList::parse(&tag_list.outer_html()).ok()?;
+    let tag_group_vec = tag_group_list.group_vec;
 
     Some(GalleryDetail {
         gid,
@@ -179,11 +197,11 @@ fn parse_internal(doc: &str) -> Option<GalleryDetail> {
         favorite_slot_opt,
         favorite_name_opt,
         rating_count,
-        tag_group_vec: vec![],
-        comment_vec: vec![],
-        preview_pages: 0,
-        preview_set: GalleryPreviewSet {},
-        url: "".to_string(),
+        tag_group_vec,
+        comment_list,
+        preview_pages,
+        preview_set,
+        url,
         title,
         title_jpn,
         category,
@@ -193,23 +211,7 @@ fn parse_internal(doc: &str) -> Option<GalleryDetail> {
     })
 }
 
-fn parse_cover_style(style: &str) -> Result<String, String> {
-    const PATTERN_COVER: &str = r#"width:(\d+)px; height:(\d+)px.+?url\((.+?)\)"#;
-
-    let regex = Regex::new(PATTERN_COVER).unwrap();
-    if let Some(cap) = regex.captures(style) {
-        Ok(String::from(&cap[3]))
-    } else {
-        Err(String::from("parses cover style fail."))
-    }
-}
-
-
-// Regex.
-
-const PATTERN_TAG_GROUP: &str = r#"<tr><td[^<>]+>([\w\s]+):</td><td>(?:<div[^<>]+><a[^<>]+>[\w\s]+</a></div>)+</td></tr>"#;
-const PATTERN_TAG: &str = r#"<div[^<>]+><a[^<>]+>([\w\s]+)</a></div>"#;
-const PATTERN_PAGES: &str = r#"<tr><td[^<>]*>Length:</td><td[^<>]*>([\d,]+) pages</td></tr>"#;
+// const PATTERN_PAGES: &str = r#"<tr><td[^<>]*>Length:</td><td[^<>]*>([\d,]+) pages</td></tr>"#;
 
 #[cfg(test)]
 mod tests {
@@ -219,14 +221,14 @@ mod tests {
     #[test]
     fn parse_test() {
         let doc = read_test_file("gallery_detail.html");
-        parse_internal(&doc);
+        assert_eq!(GalleryDetail::parse(&doc).is_ok(), true);
     }
 
-    #[test]
-    fn parse_cover_style_test() {
-        let style = r#"width:250px; height:354px; background:transparent url(https://ehgt.org/8f/3e/8f3ed3234614db3932038b8d7c80a6fd17fe2c41-2942019-2828-4000-jpg_250.jpg) no-repeat"#;
-        assert_eq!(parse_cover_style(style).unwrap(), r#"https://ehgt.org/8f/3e/8f3ed3234614db3932038b8d7c80a6fd17fe2c41-2942019-2828-4000-jpg_250.jpg"#);
-    }
+    // #[test]
+    // fn parse_cover_style_test() {
+    //     let style = r#"width:250px; height:354px; background:transparent url(https://ehgt.org/8f/3e/8f3ed3234614db3932038b8d7c80a6fd17fe2c41-2942019-2828-4000-jpg_250.jpg) no-repeat"#;
+    //     assert_eq!(parse_cover_style(style).unwrap(), r#"https://ehgt.org/8f/3e/8f3ed3234614db3932038b8d7c80a6fd17fe2c41-2942019-2828-4000-jpg_250.jpg"#);
+    // }
 
     #[test]
     fn parse_detail_test() {

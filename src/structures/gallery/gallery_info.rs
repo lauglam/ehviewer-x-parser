@@ -1,10 +1,10 @@
 use regex::Regex;
 use visdom::Vis;
 use crate::structures::{
-    category::Category,
-    favorite_slot::FavoriteSlot,
-    gallery::inline::Inline,
-    gallery_detail_url::GalleryDetailUrl,
+    Category,
+    FavoriteSlot,
+    GalleryDetailUrl,
+    gallery::Inline,
 };
 use crate::utils::{
     parse_i32,

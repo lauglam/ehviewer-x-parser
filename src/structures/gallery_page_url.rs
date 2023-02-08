@@ -22,7 +22,7 @@ impl GalleryPageUrl {
         let captures = regex.captures(url).ok_or(String::from("parses gallery page url fail."))?;
         let p_token = String::from(&captures[1]);
         let gid = parse_u64(&captures[2])?;
-        let page = parse_u32(&captures[3])?;
+        let page = parse_u32(&captures[3])? - 1;
 
         Ok(GalleryPageUrl {
             gid,

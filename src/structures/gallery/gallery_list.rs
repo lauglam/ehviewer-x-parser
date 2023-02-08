@@ -1,7 +1,7 @@
 use visdom::Vis;
-use crate::structures::{
-    gallery::gallery_info::GalleryInfo,
-    gallery::inline::Inline,
+use crate::structures::gallery::{
+    GalleryInfo,
+    Inline,
 };
 
 /// GalleryList structures.
