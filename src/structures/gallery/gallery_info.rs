@@ -1,12 +1,11 @@
-#![allow(dead_code)]
-
-use core::f32;
 use regex::Regex;
-use visdom::types::Elements;
 use visdom::Vis;
-use crate::structures::category::Category;
-use crate::structures::favorite_slot::FavoriteSlot;
-use crate::structures::gallery_detail_url::GalleryDetailUrl;
+use crate::structures::{
+    category::Category,
+    favorite_slot::FavoriteSlot,
+    gallery::inline::Inline,
+    gallery_detail_url::GalleryDetailUrl,
+};
 use crate::utils::{
     parse_i32,
     parse_u32,
@@ -33,11 +32,11 @@ pub struct GalleryInfo {
 }
 
 impl GalleryInfo {
-    pub fn parse(element: &str, inline: &Inline) -> Result<GalleryInfo, String> {
+    pub fn parse(ele: &str, inline: &Inline) -> Result<GalleryInfo, String> {
         const PATTERN_THUMB_SIZE: &str = r#"height:(\d+)px;width:(\d+)px"#;
         const PATTERN_PAGES: &str = r#"(\d+) page"#;
 
-        let root = Vis::load(element).map_err(|_| String::from("parses gallery info fail."))?;
+        let root = Vis::load(ele).map_err(|_| String::from("parses gallery info fail."))?;
         let gl_name = root.find(r#".glname"#);
 
         // gid, token
@@ -291,98 +290,6 @@ const S_LANG_TAGS: [&str; 14] = [
     "language:dutch",
 ];
 
-pub enum Inline {
-    MinimalOrMinimalPlus,
-    Compact,
-    Extended,
-    Thumbnail,
-}
-
-impl Inline {
-    pub fn parse(element: &Elements) -> Result<Inline, String> {
-        if element.has_class(r#"gltm"#) {
-            // Minimal or Minimal+.
-            Ok(Inline::MinimalOrMinimalPlus)
-        } else if element.has_class(r#"gltc"#) {
-            // Compact.
-            Ok(Inline::Compact)
-        } else if element.has_class(r#"glte"#) {
-            // Extended.
-            Ok(Inline::Extended)
-        } else if element.has_class("gld") {
-            // Thumbnail.
-            Ok(Inline::Thumbnail)
-        } else {
-            Err(String::from("parses inline fail."))
-        }
-    }
-}
-
-/// GalleryList structures.
-pub struct GalleryList {
-    /// ?next=2453493
-    pub next: usize,
-    /// ?next=2453493&jump=1d
-    /// ?next=2453493&jump=3d
-    /// ?next=2453493&jump=1w
-    /// ?next=2453493&jump=2w
-    /// ?next=2453493&jump=1m
-    /// ?next=2453493&jump=6m
-    /// ?next=2453493&jump=1y
-    /// ?next=2453493&jump=2y
-    pub jump: Option<String>,
-    /// ?next=2453493&seek=2023-02-01
-    pub seek: Option<String>,
-    pub gallery_info_vec: Vec<GalleryInfo>,
-}
-
-impl GalleryList {
-    pub fn parse(doc: &str) -> Result<GalleryList, String> {
-        if let Ok(root) = Vis::load(doc) {
-            // TODO parse pages
-            let next = 2453493 as usize;
-            let jump = None;
-            let seek = None;
-
-            // Parses gallery info.
-            let itg = root.find(".itg");
-
-            // There are several styles of itg.
-            let mut items;
-            let inline = Inline::parse(&itg)?;
-            match inline {
-                Inline::MinimalOrMinimalPlus | Inline::Compact => {
-                    // Minimal or Minimal+ or Compact.
-                    items = itg.children("tr");
-                    // First one is header, skip it.
-                    items = items.slice(1..);
-                }
-                Inline::Extended => {
-                    // Extended.
-                    items = itg.children("tr");
-                }
-                Inline::Thumbnail => {
-                    // Thumbnail.
-                    items = itg.find(".gl1t")
-                }
-            }
-
-            let mut gallery_info_vec = Vec::new();
-            for item in items {
-                gallery_info_vec.push(GalleryInfo::parse(&item.outer_html(), &inline)?);
-            }
-
-            Ok(GalleryList {
-                next,
-                jump,
-                seek,
-                gallery_info_vec,
-            })
-        } else {
-            Err(String::from("parses gallery list fail."))
-        }
-    }
-}
 
 fn parse_pages(doc: &str) -> Result<usize, String> {
     todo!()
@@ -417,8 +324,6 @@ fn parse_rating(rating_style: &str) -> Result<f32, String> {
     }
 }
 
-const PATTERN_NEXT_PAGE: &str = r#"page=(\d+)"#;
-
 #[cfg(test)]
 mod tests {
     use crate::utils::test::read_test_file;
@@ -431,20 +336,5 @@ mod tests {
     fn parse_rating_test() {
         let rating_style = "background-position:0px -21px;opacity:0.53333333333333";
         assert_eq!(parse_rating(rating_style).unwrap(), 4.5 as f32);
-    }
-
-    #[test]
-    fn parse_gallery_info_test() {
-        let doc = read_test_file("gallery_list_minimal.html");
-        let result = GalleryList::parse(&doc);
-
-        let doc = read_test_file("gallery_list_compact.html");
-        let result = GalleryList::parse(&doc);
-
-        let doc = read_test_file("gallery_list_extended.html");
-        let result = GalleryList::parse(&doc);
-
-        let doc = read_test_file("gallery_list_thumbnail.html");
-        let result = GalleryList::parse(&doc);
     }
 }

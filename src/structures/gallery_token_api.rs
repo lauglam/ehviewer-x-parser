@@ -51,7 +51,7 @@ mod tests {
                     }
                 ]
             }
-            "#;
+        "#;
 
         assert_eq!(GalleryToken::parse(json).unwrap(), GalleryToken {
             token_vec_opt: Some(vec![Token {
@@ -65,7 +65,7 @@ mod tests {
             {
                 "error": "maomao is moe~"
             }
-            "#;
+        "#;
 
         assert_eq!(GalleryToken::parse(json).unwrap(), GalleryToken {
             token_vec_opt: None,

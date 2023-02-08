@@ -1,128 +1,23 @@
-#![allow(dead_code)]
-
 use regex::Regex;
 use visdom::Vis;
 use std::collections::HashMap;
-use crate::structures::category::Category;
-use crate::structures::favorite_slot::FavoriteSlot;
-use crate::structures::gallery_detail_url::GalleryDetailUrl;
 use crate::utils::{
     parse_f32,
     parse_u32,
     parse_u64,
     unescape,
 };
-
-#[derive(Debug, PartialEq)]
-pub struct Comment {}
-
-#[derive(Debug, PartialEq)]
-pub struct PreviewSet {}
-
-#[derive(Debug, PartialEq)]
-pub struct GalleryDetailDetail {
-    pub posted: String,
-    pub parent_opt: Option<String>,
-    pub visible: String,
-    pub language: String,
-    pub file_size: String,
-    pub pages: u32,
-    pub favorite_count: u32,
-}
-
-impl GalleryDetailDetail {
-    /// <table>
-    ///     <tr>
-    ///         <td class="gdt1">Posted:</td>
-    ///         <td class="gdt2">2023-02-07 07:33</td>
-    ///     </tr>
-    ///     ...
-    /// </table>
-    pub fn parse(table: &str) -> Result<GalleryDetailDetail, String> {
-        const PATTERN_PAGES: &str = r#"(\d+) pages"#;
-        const PATTERN_FAVORITE_COUNT: &str = r#"(\d+) times"#;
-
-        if let Ok(root) = Vis::load(table) {
-            let gdt1s = root.find(".gdt1");
-
-            let (
-                mut posted,
-                mut parent_opt,
-                mut visible,
-                mut language,
-                mut file_size,
-                mut pages,
-                mut favorite_count
-            ) = (None, None, None, None, None, None, None);
-
-            for gdt1 in gdt1s {
-                match gdt1.text().as_str() {
-                    "Posted:" => {
-                        let gdt2 = gdt1.next_element_sibling().unwrap();
-                        posted = Some(gdt2.text());
-                    }
-                    "Parent:" => {
-                        let gdt2 = gdt1.next_element_sibling().unwrap();
-
-                        if let Some(href) = gdt2.get_attribute("href") {
-                            parent_opt = Some(href.to_string());
-                        }
-                    }
-                    "Visible:" => {
-                        let gdt2 = gdt1.next_element_sibling().unwrap();
-                        visible = Some(gdt2.text());
-                    }
-                    "Language:" => {
-                        let gdt2 = gdt1.next_element_sibling().unwrap();
-                        language = Some(gdt2.text());
-                    }
-                    "File Size:" => {
-                        let gdt2 = gdt1.next_element_sibling().unwrap();
-                        file_size = Some(gdt2.text());
-                    }
-                    "Length:" => {
-                        let gdt2 = gdt1.next_element_sibling().unwrap();
-                        let gdt2 = gdt2.text();
-
-                        let regex = Regex::new(PATTERN_PAGES).unwrap();
-                        let captures = regex.captures(&gdt2).unwrap();
-                        pages = Some(parse_u32(&captures[1])?);
-                    }
-                    "Favorited:" => {
-                        let gdt2 = gdt1.next_element_sibling().unwrap();
-                        let gdt2 = gdt2.text();
-
-                        let regex = Regex::new(PATTERN_FAVORITE_COUNT).unwrap();
-                        let captures = regex.captures(&gdt2).unwrap();
-                        favorite_count = Some(parse_u32(&captures[1])?);
-                    }
-                    _ => {}
-                }
-            }
-
-            if let (
-                Some(posted),
-                Some(visible),
-                Some(language),
-                Some(file_size),
-                Some(pages),
-                Some(favorite_count)
-            ) = (posted, visible, language, file_size, pages, favorite_count) {
-                return Ok(GalleryDetailDetail {
-                    posted,
-                    parent_opt,
-                    visible,
-                    language,
-                    file_size,
-                    pages,
-                    favorite_count,
-                });
-            }
-        }
-
-        Err(String::from("parses gallery detail detail fail."))
-    }
-}
+use crate::structures::{
+    category::Category,
+    favorite_slot::FavoriteSlot,
+    gallery_tag_group::GalleryTagGroup,
+    gallery_detail_url::GalleryDetailUrl,
+};
+use crate::structures::detail::{
+    gallery_comment::GalleryComment,
+    gallery_preview_set::GalleryPreviewSet,
+    gallery_detail_detail::GalleryDetailDetail,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryDetail {
@@ -140,9 +35,9 @@ pub struct GalleryDetail {
     pub favorite_slot_opt: Option<u32>,
     pub rating_count: u32,
     pub tag_group_vec: Vec<GalleryTagGroup>,
-    pub comment_vec: Vec<Comment>,
+    pub comment_vec: Vec<GalleryComment>,
     pub preview_pages: u32,
-    pub preview_set: PreviewSet,
+    pub preview_set: GalleryPreviewSet,
     pub url: String,
     pub title: String,
     pub title_jpn: String,
@@ -270,7 +165,6 @@ fn parse_internal(doc: &str) -> Option<GalleryDetail> {
     let cdiv = root.find("#cdiv");
 
 
-
     Some(GalleryDetail {
         gid,
         token,
@@ -288,7 +182,7 @@ fn parse_internal(doc: &str) -> Option<GalleryDetail> {
         tag_group_vec: vec![],
         comment_vec: vec![],
         preview_pages: 0,
-        preview_set: PreviewSet {},
+        preview_set: GalleryPreviewSet {},
         url: "".to_string(),
         title,
         title_jpn,
@@ -310,89 +204,17 @@ fn parse_cover_style(style: &str) -> Result<String, String> {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct GalleryTagGroup {
-    pub tag_group_name: String,
-    pub tag_vec: Vec<String>,
-}
-
-impl GalleryTagGroup {
-    /// ```html
-    /// <tr><td class="tc">parody:</td><td><div class="gtl" title="parody:senran kagura">senran kagura</div><div class="gtl" title="parody:the idolmaster">the idolmaster</div></td></tr>
-    ///                    ^                                                             ^                                                                 ^
-    ///                    tag_group_name                                                tag_vec[0]                                                        tag_vec[1]
-    /// ```
-    pub fn parse(element: &str) -> Result<GalleryTagGroup, String> {
-        if let Ok(root) = Vis::load(element) {
-            let tag_group_name = root.find(".tc").text();
-            let tag_group_name = String::from(&tag_group_name[..tag_group_name.len() - 1]);
-
-            let tag_vec = root.find(".gtl")
-                .map(|_, ele| {
-                    return ele.text();
-                });
-
-            if !tag_group_name.is_empty() && !tag_vec.is_empty() {
-                return Ok(GalleryTagGroup {
-                    tag_group_name,
-                    tag_vec,
-                });
-            }
-        }
-
-        Err(String::from("parses gallery tag group fail."))
-    }
-
-    pub fn size(&self) -> usize {
-        self.tag_vec.len()
-    }
-
-    pub fn get_tag_at(&self, index: usize) -> Option<&String> {
-        self.tag_vec.get(index)
-    }
-
-    pub fn add_tag(&mut self, tag: String) {
-        self.tag_vec.push(tag)
-    }
-}
-
-impl ToString for GalleryTagGroup {
-    fn to_string(&self) -> String {
-        format!("{} ({})", self.tag_group_name, self.size())
-    }
-}
 
 // Regex.
 
-const PATTERN_COMMENT_DATETIME: &str = r#"Posted\s*on\s*(.+?)\s*by"#;
 const PATTERN_TAG_GROUP: &str = r#"<tr><td[^<>]+>([\w\s]+):</td><td>(?:<div[^<>]+><a[^<>]+>[\w\s]+</a></div>)+</td></tr>"#;
 const PATTERN_TAG: &str = r#"<div[^<>]+><a[^<>]+>([\w\s]+)</a></div>"#;
-const PATTERN_COMMENT: &str = r#"<div class="c3">Posted on ([^<>]+) by: &nbsp; <a[^<>]+>([^<>]+)</a>.+?<div class="c6"[^>]*>(.+?)</div><div class="c[78]""#;
 const PATTERN_PAGES: &str = r#"<tr><td[^<>]*>Length:</td><td[^<>]*>([\d,]+) pages</td></tr>"#;
-const PATTERN_PREVIEW_PAGES: &str = r#"<td[^>]+><a[^>]+>([\d,]+)</a></td><td[^>]+>(?:<a[^>]+>)?&gt;(?:</a>)?</td>"#;
-const PATTERN_NORMAL_PREVIEW: &str = r#"<div class="gdtm"[^<>]*><div[^<>]*width:(\d+)[^<>]*height:(\d+)[^<>]*\((.+?)\)[^<>]*-(\d+)px[^<>]*><a[^<>]*href="(.+?)"[^<>]*><img alt="([\d,]+)""#;
-const PATTERN_LARGE_PREVIEW: &str = r#"<div class="gdtl".+?<a href="(.+?)"><img alt="([\d,]+)".+?src="(.+?)""#;
 
 #[cfg(test)]
 mod tests {
     use crate::utils::test::read_test_file;
     use super::*;
-
-    #[test]
-    fn parse_tag_group_test() {
-        let element = r#"
-            <tr>
-                <td class="tc">parody:</td>
-                <td>
-                    <div class="gtl" title="parody:senran kagura">senran kagura</div>
-                    <div class="gtl" title="parody:the idolmaster">the idolmaster</div>
-                </td>
-            </tr>"#;
-
-        let tag_group = GalleryTagGroup::parse(&element).unwrap();
-        assert_eq!(tag_group.tag_vec, vec![r#"senran kagura"#, r#"the idolmaster"#]);
-        assert_eq!(tag_group.tag_group_name, r#"parody"#);
-    }
 
     #[test]
     fn parse_test() {
