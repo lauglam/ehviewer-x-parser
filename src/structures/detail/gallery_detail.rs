@@ -7,11 +7,18 @@ use crate::utils::{
     parse_u64,
     unescape,
 };
-use crate::structures::{Category, FavoriteSlot, GalleryTagGroup, GalleryDetailUrl, detail::{
-    GalleryCommentList,
-    GalleryDetailDetail,
-    GalleryPreviewSet,
-}, GalleryTagGroupList};
+use crate::structures::{
+    Category,
+    FavoriteSlot,
+    GalleryTagGroup,
+    GalleryDetailUrl,
+    GalleryTagGroupList,
+    detail::{
+        GalleryCommentList,
+        GalleryDetailDetail,
+        GalleryPreviewSet,
+    },
+};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryDetail {
