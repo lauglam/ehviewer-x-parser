@@ -1,6 +1,14 @@
-use std::sync::Mutex;
-use once_cell::sync::Lazy;
 use crate::eh_config;
+
+trait IgnoreCase {
+    fn contains_ignore_case(&self, x: &str) -> bool;
+}
+
+impl IgnoreCase for [&str] {
+    fn contains_ignore_case(&self, x: &str) -> bool {
+        self.iter().any(|s| s.to_lowercase() == x.to_lowercase())
+    }
+}
 
 #[derive(Debug, PartialEq)]
 pub struct Category {
@@ -11,112 +19,73 @@ pub struct Category {
 
 impl From<&String> for Category {
     fn from(value: &String) -> Self {
-        Category::from(value.as_str())
-    }
-}
+        for (idx, strings) in CATEGORY_STRINGS.iter().enumerate() {
+            if !strings.contains_ignore_case(&value.as_str()) {
+                continue;
+            }
 
-impl From<&str> for Category {
-    fn from(value: &str) -> Self {
-        let strings = CATEGORY_STRINGS.lock().unwrap();
+            return Category {
+                string: String::from(value),
+                color: CATEGORY_COLORS[idx],
+                value: CATEGORY_VALUES[idx],
+            };
+        }
 
-        let ids_opt = strings.iter()
-            .position(|str_vec| str_vec.contains(&value));
-
-        if let Some(idx) = ids_opt {
-            Category::from(CATEGORY_VALUES[idx])
-        } else {
-            Category::from(CATEGORY_VALUES[10])
+        // unknown.
+        Category {
+            string: String::from(CATEGORY_STRINGS[10][0]),
+            color: CATEGORY_COLORS[10],
+            value: CATEGORY_VALUES[10],
         }
     }
 }
 
 impl From<u32> for Category {
     fn from(value: u32) -> Self {
-        let strings = CATEGORY_STRINGS.lock().unwrap();
-        match value {
-            eh_config::MISC => Category {
-                string: String::from(strings[0][0]),
-                color: BG_COLOR_MISC,
+        let idx_opt = CATEGORY_VALUES.iter().position(|v| *v == value);
+        if let Some(idx) = idx_opt {
+            Category {
+                color: CATEGORY_COLORS[idx],
+                string: String::from(CATEGORY_STRINGS[idx][0]),
                 value,
-            },
-            eh_config::DOUJINSHI => Category {
-                string: String::from(strings[1][0]),
-                color: BG_COLOR_DOUJINSHI,
-                value,
-            },
-            eh_config::MANGA => Category {
-                string: String::from(strings[2][0]),
-                color: BG_COLOR_MANGA,
-                value,
-            },
-            eh_config::ARTIST_CG => Category {
-                string: String::from(strings[3][0]),
-                color: BG_COLOR_ARTIST_CG,
-                value,
-            },
-            eh_config::GAME_CG => Category {
-                string: String::from(strings[4][0]),
-                color: BG_COLOR_GAME_CG,
-                value,
-            },
-            eh_config::IMAGE_SET => Category {
-                string: String::from(strings[5][0]),
-                color: BG_COLOR_IMAGE_SET,
-                value,
-            },
-            eh_config::COSPLAY => Category {
-                string: String::from(strings[6][0]),
-                color: BG_COLOR_COSPLAY,
-                value,
-            },
-            eh_config::ASIAN_PORN => Category {
-                string: String::from(strings[7][0]),
-                color: BG_COLOR_ASIAN_PORN,
-                value,
-            },
-            eh_config::NON_H => Category {
-                string: String::from(strings[8][0]),
-                color: BG_COLOR_NON_H,
-                value,
-            },
-            eh_config::WESTERN => Category {
-                string: String::from(strings[9][0]),
-                color: BG_COLOR_WESTERN,
-                value,
-            },
-            _ => Category {
-                string: String::from(strings[10][0]),
-                color: BG_COLOR_UNKNOWN,
-                value: UNKNOWN,
-            },
+            }
+        } else {
+            // unknown.
+            Category {
+                string: String::from(CATEGORY_STRINGS[10][0]),
+                color: CATEGORY_COLORS[10],
+                value: CATEGORY_VALUES[10],
+            }
         }
     }
 }
 
 // Use it for homepage
 const NONE: i8 = -1;
-const UNKNOWN: u32 = 0x400;
 
-const ALL_CATEGORY: u32 = UNKNOWN - 1;
+const ALL_CATEGORY: u32 = VALUE_UNKNOWN - 1;
 
-// DOUJINSHI|MANGA|ARTIST_CG|GAME_CG|WESTERN|NON_H|IMAGE_SET|COSPLAY|ASIAN_PORN|MISC;
-
-const BG_COLOR_DOUJINSHI: u32 = 0xfff44336;
-const BG_COLOR_MANGA: u32 = 0xffff9800;
-const BG_COLOR_ARTIST_CG: u32 = 0xfffbc02d;
-const BG_COLOR_GAME_CG: u32 = 0xff4caf50;
-const BG_COLOR_WESTERN: u32 = 0xff8bc34a;
-const BG_COLOR_NON_H: u32 = 0xff2196f3;
-const BG_COLOR_IMAGE_SET: u32 = 0xff3f51b5;
-const BG_COLOR_COSPLAY: u32 = 0xff9c27b0;
-const BG_COLOR_ASIAN_PORN: u32 = 0xff9575cd;
-const BG_COLOR_MISC: u32 = 0xfff06292;
-const BG_COLOR_UNKNOWN: u32 = 0x00000000;
 
 // Remove [XXX], (XXX), {XXX}, ~XXX~ stuff
 const PATTERN_TITLE_PREFIX: &str = r#"^(?:(?:\([^\)]*\))|(?:\[[^\]]*\])|(?:\{[^\}]*\})|(?:~[^~]*~)|\s+)*"#;
 // Remove [XXX], (XXX), {XXX}, ~XXX~ stuff and something like ch. 1-23
 const PATTERN_TITLE_SUFFIX: &str = r#"(?:\s+ch.[\s\d-]+)?(?:(?:\([^\)]*\))|(?:\[[^\]]*\])|(?:\{[^\}]*\})|(?:~[^~]*~)|\s+)*$"#;
+
+// DOUJINSHI|MANGA|ARTIST_CG|GAME_CG|WESTERN|NON_H|IMAGE_SET|COSPLAY|ASIAN_PORN|MISC;
+
+const CATEGORY_COLORS: [u32; 11] = [
+    BG_COLOR_MISC,
+    BG_COLOR_DOUJINSHI,
+    BG_COLOR_MANGA,
+    BG_COLOR_ARTIST_CG,
+    BG_COLOR_GAME_CG,
+    BG_COLOR_IMAGE_SET,
+    BG_COLOR_COSPLAY,
+    BG_COLOR_ASIAN_PORN,
+    BG_COLOR_NON_H,
+    BG_COLOR_WESTERN,
+    BG_COLOR_UNKNOWN
+];
 
 const CATEGORY_VALUES: [u32; 11] = [
     eh_config::MISC,
@@ -129,23 +98,35 @@ const CATEGORY_VALUES: [u32; 11] = [
     eh_config::ASIAN_PORN,
     eh_config::NON_H,
     eh_config::WESTERN,
-    UNKNOWN
+    VALUE_UNKNOWN
 ];
 
-static CATEGORY_STRINGS: Lazy<Mutex<[Vec<&str>; 11]>> = Lazy::new(|| {
-    Mutex::new(
-        [
-            vec!["misc"],
-            vec!["doujinshi"],
-            vec!["manga"],
-            vec!["artistcg", "Artist CG Sets", "Artist CG"],
-            vec!["gamecg", "Game CG Sets", "Game CG"],
-            vec!["imageset", "Image Sets", "Image Set"],
-            vec!["cosplay"],
-            vec!["asianporn", "Asian Porn"],
-            vec!["non-h"],
-            vec!["western"],
-            vec!["unknown"],
-        ]
-    )
-});
+const VALUE_UNKNOWN: u32 = 0x400;
+
+const CATEGORY_STRINGS: [[&str; 3]; 11] = [
+    ["misc", EMPTY_STRING, EMPTY_STRING],
+    ["doujinshi", EMPTY_STRING, EMPTY_STRING],
+    ["manga", EMPTY_STRING, EMPTY_STRING],
+    ["artistcg", "Artist CG Sets", "Artist CG"],
+    ["gamecg", "Game CG Sets", "Game CG"],
+    ["imageset", "Image Sets", "Image Set"],
+    ["cosplay", EMPTY_STRING, EMPTY_STRING],
+    ["asianporn", "Asian Porn", EMPTY_STRING],
+    ["non-h", EMPTY_STRING, EMPTY_STRING],
+    ["western", EMPTY_STRING, EMPTY_STRING],
+    ["unknown", EMPTY_STRING, EMPTY_STRING],
+];
+
+const BG_COLOR_MISC: u32 = 0xfff06292;
+const BG_COLOR_DOUJINSHI: u32 = 0xfff44336;
+const BG_COLOR_MANGA: u32 = 0xffff9800;
+const BG_COLOR_ARTIST_CG: u32 = 0xfffbc02d;
+const BG_COLOR_GAME_CG: u32 = 0xff4caf50;
+const BG_COLOR_IMAGE_SET: u32 = 0xff3f51b5;
+const BG_COLOR_COSPLAY: u32 = 0xff9c27b0;
+const BG_COLOR_ASIAN_PORN: u32 = 0xff9575cd;
+const BG_COLOR_NON_H: u32 = 0xff2196f3;
+const BG_COLOR_WESTERN: u32 = 0xff8bc34a;
+const BG_COLOR_UNKNOWN: u32 = 0x00000000;
+
+const EMPTY_STRING: &str = "";

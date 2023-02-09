@@ -105,8 +105,9 @@ fn parse_internal(doc: &str) -> Option<GalleryDetail> {
     let gj = gm.find("#gj");
     let title_jpn = gj.text();
 
-    let cs = gm.find("#gbc > .cs");
-    let category = Category::from(&cs.text()).value;
+    let cs = gm.find("#gdc > .cs");
+    let cs = cs.text();
+    let category = Category::from(&cs).value;
 
     let gdn = gm.find("#gdn");
     let uploader = gdn.text();
@@ -162,10 +163,10 @@ fn parse_internal(doc: &str) -> Option<GalleryDetail> {
     let c_div = root.find("#cdiv");
     let comment_list = GalleryCommentList::parse(&c_div.outer_html()).ok()?;
 
-    let last_page = root.find(".ptt tr:nth-last-child(2)");
+    let last_page = root.find(".ptt td:nth-last-child(2) > a");
     let preview_pages = parse_u32(&last_page.text()).ok()?;
 
-    let first_page = root.find(".ptt tr:nth-child(2)");
+    let first_page = root.find(".ptt td:nth-child(2) > a");
     let href = first_page.attr("href")?;
     let url = href.to_string();
 
