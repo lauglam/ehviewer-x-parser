@@ -1,4 +1,5 @@
 use regex::Regex;
+use crate::{EhResult, ParseError, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct Torrent {
@@ -6,12 +7,10 @@ pub struct Torrent {
     pub download_url: String,
 }
 
-impl Torrent {
-    pub fn parse(ele: &str) -> Result<Torrent, String> {
-        const PATTERN_TORRENT: &str = r#"<td colspan="5"> &nbsp; <a href=".*" onclick="document.location='([^"]+)'[^<]+>([^<]+)</a></td>"#;
-
+impl Parser for Torrent {
+    fn parse(doc: &str) -> EhResult<Self> {
         let regex = Regex::new(PATTERN_TORRENT).unwrap();
-        let captures = regex.captures(ele).ok_or(String::from("parses torrent fail."))?;
+        let captures = regex.captures(doc).ok_or(ParseError::RegexMatchFailed)?;
 
         let download_url = String::from(&captures[1]);
         let filename = String::from(&captures[2]);
@@ -22,6 +21,8 @@ impl Torrent {
         })
     }
 }
+
+const PATTERN_TORRENT: &str = r#"<td colspan="5"> &nbsp; <a href=".*" onclick="document.location='([^"]+)'[^<]+>([^<]+)</a></td>"#;
 
 #[cfg(test)]
 mod tests {
@@ -36,7 +37,7 @@ mod tests {
         "#;
 
         assert_eq!(Torrent::parse(ele).unwrap(), Torrent {
-            filename: String::from("xxxx.zip"),
+            filename: String::from(r#"xxxx.zip"#),
             download_url: String::from("https://ehtracker.org/get/xxxx/xxxx.torrent?p=xxxx"),
         });
     }

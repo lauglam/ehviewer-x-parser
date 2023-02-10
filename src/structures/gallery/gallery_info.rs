@@ -1,14 +1,16 @@
 use regex::Regex;
 use visdom::Vis;
-use crate::structures::{
-    Category,
-    FavoriteSlot,
-    GalleryDetailUrl,
-    gallery::Inline,
-};
-use crate::utils::{
-    parse_i32,
-    parse_u32,
+use crate::{
+    EhResult,
+    ParseError,
+    Parser,
+    utils::{parse_i32, parse_u32},
+    structures::{
+        Category,
+        FavoriteSlot,
+        GalleryDetailUrl,
+        gallery::InlineSet,
+    },
 };
 
 #[derive(Debug, PartialEq)]
@@ -31,32 +33,33 @@ pub struct GalleryInfo {
     pub favorite_name_opt: Option<String>,
 }
 
-impl GalleryInfo {
-    pub fn parse(ele: &str, inline: &Inline) -> Result<GalleryInfo, String> {
-        const PATTERN_THUMB_SIZE: &str = r#"height:(\d+)px;width:(\d+)px"#;
-        const PATTERN_PAGES: &str = r#"(\d+) page"#;
+impl Parser for GalleryInfo {
+    fn parse(doc: &str) -> EhResult<Self> {
+        let root = Vis::load(doc).map_err(|_| String::from("parses gallery info fail."))?;
 
-        let root = Vis::load(ele).map_err(|_| String::from("parses gallery info fail."))?;
+        let inline_set = root.find(r#".searchnav select[onchange*=inline_set]"#);
+        let inline_set = InlineSet::parse(&inline_set.outer_html())?;
+
         let gl_name = root.find(r#".glname"#);
 
         // gid, token
-        let (gid, token) = (|| -> Result<(u64, String), String> {
-            let url = match inline {
-                Inline::MinimalOrMinimalPlus | Inline::Compact | Inline::Thumbnail => {
+        let (gid, token) = (|| -> Result<(u64, String), ParseError> {
+            let url = match inline_set {
+                InlineSet::Minimal | InlineSet::MinimalPlus | InlineSet::Compact | InlineSet::Thumbnail => {
                     gl_name.find(r#"a"#)
                 }
-                Inline::Extended => {
+                InlineSet::Extended => {
                     gl_name.parent("a")
                 }
             };
 
-            let detail_url = GalleryDetailUrl::parse(&url.text(), true)?;
+            let detail_url = GalleryDetailUrl::parse(&url.text())?;
             Ok((detail_url.gid, detail_url.token))
         })()?;
 
         // simple_tag_vec_opt
-        let simple_tag_vec_opt: Option<Vec<String>> = match inline {
-            Inline::Compact | Inline::Extended => {
+        let simple_tag_vec_opt: Option<Vec<String>> = match inline_set {
+            InlineSet::Compact | InlineSet::Extended => {
                 let gts = gl_name.find(".gt");
                 let mut simple_tag_vec = Vec::new();
                 for gt in gts {
@@ -71,11 +74,11 @@ impl GalleryInfo {
 
         // category
         let category = (|| {
-            let cs_or_cn = match inline {
-                Inline::MinimalOrMinimalPlus | Inline::Thumbnail => {
+            let cs_or_cn = match inline_set {
+                InlineSet::Minimal | InlineSet::MinimalPlus | InlineSet::Thumbnail => {
                     root.find(".gl1m > .cs")
                 }
-                Inline::Compact | Inline::Extended => {
+                InlineSet::Compact | InlineSet::Extended => {
                     root.find(".cn")
                 }
             };
@@ -83,15 +86,15 @@ impl GalleryInfo {
         })();
 
         // pages
-        let pages = (|| -> Result<u32, String>{
-            let page = match inline {
-                Inline::MinimalOrMinimalPlus | Inline::Compact => {
+        let pages = (|| -> EhResult<u32>{
+            let page = match inline_set {
+                InlineSet::Minimal | InlineSet::MinimalPlus | InlineSet::Compact => {
                     root.find(r#".glthumb .ir"#)
                 }
-                Inline::Extended => {
+                InlineSet::Extended => {
                     root.find(".ir").next("").next("")
                 }
-                Inline::Thumbnail => {
+                InlineSet::Thumbnail => {
                     root.find(".ir").next("")
                 }
             }.text();
@@ -102,12 +105,12 @@ impl GalleryInfo {
         })()?;
 
         // thumb, thumb_height, thumb_width
-        let (thumb, thumb_height, thumb_width) = (|| -> Result<(String, u32, u32), String> {
-            let img = match inline {
-                Inline::MinimalOrMinimalPlus | Inline::Compact => {
+        let (thumb, thumb_height, thumb_width) = (|| -> Result<(String, u32, u32), ParseError> {
+            let img = match inline_set {
+                InlineSet::Minimal | InlineSet::MinimalPlus | InlineSet::Compact => {
                     root.find(r#".glthumb img"#)
                 }
-                Inline::Extended | Inline::Thumbnail => {
+                InlineSet::Extended | InlineSet::Thumbnail => {
                     root.find("img")
                 }
             };
@@ -125,12 +128,12 @@ impl GalleryInfo {
         })()?;
 
         // rating
-        let rating = (|| -> Result<f32, String> {
-            let ir = match inline {
-                Inline::MinimalOrMinimalPlus | Inline::Compact => {
+        let rating = (|| -> EhResult<f32> {
+            let ir = match inline_set {
+                InlineSet::Minimal | InlineSet::MinimalPlus | InlineSet::Compact => {
                     root.find(r#".glthumb .ir"#)
                 }
-                Inline::Extended | Inline::Thumbnail => {
+                InlineSet::Extended | InlineSet::Thumbnail => {
                     root.find(".ir")
                 }
             };
@@ -139,27 +142,29 @@ impl GalleryInfo {
         })()?;
 
         // posted, is_favorited, favorite_slot, favorite_name_opt
-        let (posted, is_favorited, favorite_slot_opt, favorite_name_opt) = (|| -> Result<(String, bool, Option<u32>, Option<String>), String>{
-            let posted = root.find(&format!("#posted_{}", gid));
+        let (posted, is_favorited, favorite_slot_opt, favorite_name_opt) =
+            (|| -> Result<(String, bool, Option<u32>, Option<String>), ParseError>
+                {
+                    let posted = root.find(&format!("#posted_{}", gid));
 
-            let (is_favorited, favorite_slot_opt) = if let Some(slot) = posted.attr("style") {
-                (true, Some(FavoriteSlot::parse(&slot.to_string())?.value))
-            } else {
-                (false, None)
-            };
+                    let (is_favorited, favorite_slot_opt) = if let Some(slot) = posted.attr("style") {
+                        (true, Some(FavoriteSlot::parse(&slot.to_string())?.value))
+                    } else {
+                        (false, None)
+                    };
 
-            let favorite_name_opt = if let Some(title) = posted.attr("title") {
-                Some(title.to_string())
-            } else {
-                None
-            };
+                    let favorite_name_opt = if let Some(title) = posted.attr("title") {
+                        Some(title.to_string())
+                    } else {
+                        None
+                    };
 
-            Ok((posted.text(), is_favorited, favorite_slot_opt, favorite_name_opt))
-        })()?;
+                    Ok((posted.text(), is_favorited, favorite_slot_opt, favorite_name_opt))
+                })()?;
 
         // uploader_opt
-        let uploader_opt = match inline {
-            Inline::MinimalOrMinimalPlus | Inline::Compact | Inline::Extended => {
+        let uploader_opt = match inline_set {
+            InlineSet::Minimal | InlineSet::MinimalPlus | InlineSet::Compact | InlineSet::Extended => {
                 let prefix = r#"https://e-hentai.org/uploader/"#;
                 let uploader = root.find(&format!("[href^={}]", prefix));
                 Some(uploader.text())
@@ -220,23 +225,24 @@ impl GalleryInfo {
     }
 }
 
-// Regex for GalleryInfo.
+const PATTERN_THUMB_SIZE: &str = r#"height:(\d+)px;width:(\d+)px"#;
+const PATTERN_PAGES: &str = r#"(\d+) page"#;
 
-const S_LANG_JA: &str = "JA";
-const S_LANG_EN: &str = "EN";
-const S_LANG_ZH: &str = "ZH";
-const S_LANG_NL: &str = "NL";
-const S_LANG_FR: &str = "FR";
-const S_LANG_DE: &str = "DE";
-const S_LANG_HU: &str = "HU";
-const S_LANG_IT: &str = "IT";
-const S_LANG_KO: &str = "KO";
-const S_LANG_PL: &str = "PL";
-const S_LANG_PT: &str = "PT";
-const S_LANG_RU: &str = "RU";
-const S_LANG_ES: &str = "ES";
-const S_LANG_TH: &str = "TH";
-const S_LANG_VI: &str = "VI";
+// const S_LANG_JA: &str = "JA";
+// const S_LANG_EN: &str = "EN";
+// const S_LANG_ZH: &str = "ZH";
+// const S_LANG_NL: &str = "NL";
+// const S_LANG_FR: &str = "FR";
+// const S_LANG_DE: &str = "DE";
+// const S_LANG_HU: &str = "HU";
+// const S_LANG_IT: &str = "IT";
+// const S_LANG_KO: &str = "KO";
+// const S_LANG_PL: &str = "PL";
+// const S_LANG_PT: &str = "PT";
+// const S_LANG_RU: &str = "RU";
+// const S_LANG_ES: &str = "ES";
+// const S_LANG_TH: &str = "TH";
+// const S_LANG_VI: &str = "VI";
 
 const S_LANGS: [&str; 14] = [
     "S_LANG_EN",
@@ -290,12 +296,7 @@ const S_LANG_TAGS: [&str; 14] = [
     "language:dutch",
 ];
 
-
-fn parse_pages(doc: &str) -> Result<usize, String> {
-    todo!()
-}
-
-fn parse_rating(rating_style: &str) -> Result<f32, String> {
+fn parse_rating(rating_style: &str) -> EhResult<f32> {
     const PATTERN_RATING: &str = r#"\d+px"#;
 
     let reg = Regex::new(PATTERN_RATING).unwrap();
@@ -320,17 +321,13 @@ fn parse_rating(rating_style: &str) -> Result<f32, String> {
 
         Ok(rate)
     } else {
-        Err(String::from("parses gallery info rating fail."))
+        Err(ParseError::RegexMatchFailed)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::utils::test::read_test_file;
     use super::*;
-
-    #[test]
-    fn parse_pages_test() {}
 
     #[test]
     fn parse_rating_test() {

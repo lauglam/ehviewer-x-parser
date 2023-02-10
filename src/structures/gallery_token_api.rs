@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::{EhResult, Parser};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct Token {
@@ -14,7 +15,7 @@ struct GalleryToken {
     error_opt: Option<String>,
 }
 
-impl GalleryToken {
+impl Parser for GalleryToken {
     /// ```json
     /// {
     ///     "tokenlist": [
@@ -31,8 +32,8 @@ impl GalleryToken {
     ///     "error": "maomao is moe~"
     /// }
     /// ```
-    pub fn parse(json: &str) -> Result<GalleryToken, String> {
-        serde_json::from_str::<GalleryToken>(json).map_err(|_| String::from("parses gallery token api fail."))
+    fn parse(doc: &str) -> EhResult<Self> {
+        Ok(serde_json::from_str(doc)?)
     }
 }
 

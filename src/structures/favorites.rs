@@ -1,5 +1,10 @@
 use visdom::Vis;
-use crate::utils::{parse_u32, trim};
+use crate::{
+    EhResult,
+    ParseError,
+    Parser,
+    utils::{parse_u32, trim},
+};
 
 #[derive(Debug, PartialEq)]
 pub struct Favorite {
@@ -12,33 +17,30 @@ pub struct Favorite {
     // pub gallery_info_vec: Vec<GalleryInfo>,
 }
 
-impl Favorite {
-    pub fn parse(doc: &str) -> Result<Self, String> {
+impl Parser for Favorite {
+    fn parse(doc: &str) -> EhResult<Self> {
         if doc.contains("This page requires you to log on.</p>") {
-            return Err(String::from("this page requires you to log on."));
+            return Err(ParseError::SignInRequired);
         }
 
         let mut cat_vec = Vec::new();
         let mut count_vec = Vec::new();
 
-        if let Ok(root) = Vis::load(doc) {
-            let fps = root.find(".ido .fp");
+        let root = Vis::load(doc)?;
+        let fps = root.find(".ido .fp");
 
-            assert_eq!(fps.length(), 10);
-            for fp in fps {
-                let count = fp.child_nodes_item(0).unwrap();
-                let cat = fp.child_nodes_item(2).unwrap();
-                count_vec.push(parse_u32(&count.text()));
-                cat_vec.push(String::from(trim(&cat.text())));
-            }
-
-
-            // let result = gallery_list_parser::
-
-            todo!()
-        } else {
-            Err(String::from("parses favorites fail."))
+        assert_eq!(fps.length(), 10);
+        for fp in fps {
+            let count = fp.child_nodes_item(0).unwrap();
+            let cat = fp.child_nodes_item(2).unwrap();
+            count_vec.push(parse_u32(&count.text()));
+            cat_vec.push(String::from(trim(&cat.text())));
         }
+
+
+        // let result = gallery_list_parser::
+
+        todo!()
     }
 }
 
@@ -51,6 +53,6 @@ mod tests {
     fn sign_in_required_test() {
         let doc = read_test_file("sign_in_required.html");
         let result = Favorite::parse(&doc);
-        assert_eq!(result, Err(String::from("this page requires you to log on.")));
+        assert_eq!(result.is_err(), true);
     }
 }

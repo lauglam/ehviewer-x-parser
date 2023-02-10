@@ -1,19 +1,18 @@
 use visdom::Vis;
+use crate::{EhResult, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryNotAvailable {
     pub error: String,
 }
 
-impl GalleryNotAvailable {
-    pub fn parse(doc: &str) -> Result<GalleryNotAvailable, String> {
-        let root = Vis::load(doc).map_err(|_| String::from("parses gallery not available fail."))?;
+impl Parser for GalleryNotAvailable {
+    fn parse(doc: &str) -> EhResult<Self> {
+        let root = Vis::load(doc)?;
         let p = root.find(".d p:first-child");
         let error = p.text();
 
-        Ok(GalleryNotAvailable {
-            error,
-        })
+        Ok(GalleryNotAvailable { error })
     }
 }
 

@@ -1,7 +1,11 @@
 use visdom::Vis;
-use crate::structures::gallery::{
-    GalleryInfo,
-    Inline,
+use crate::{
+    EhResult,
+    Parser,
+    structures::gallery::{
+        GalleryInfo,
+        InlineSet,
+    },
 };
 
 /// GalleryList structures.
@@ -22,55 +26,55 @@ pub struct GalleryList {
     pub gallery_info_vec: Vec<GalleryInfo>,
 }
 
-impl GalleryList {
-    pub fn parse(doc: &str) -> Result<GalleryList, String> {
-        if let Ok(root) = Vis::load(doc) {
-            // TODO parse pages
-            let next = 2453493 as usize;
-            let jump = None;
-            let seek = None;
+impl Parser for GalleryList {
+    fn parse(doc: &str) -> EhResult<Self> {
+        let root = Vis::load(doc)?;
 
-            // Parses gallery info.
-            let itg = root.find(".itg");
+        // TODO parse pages
+        let next = 2453493 as usize;
+        let jump = None;
+        let seek = None;
 
-            // There are several styles of itg.
-            let mut items;
-            let inline = Inline::parse(&itg)?;
-            match inline {
-                Inline::MinimalOrMinimalPlus | Inline::Compact => {
-                    // Minimal or Minimal+ or Compact.
-                    items = itg.children("tr");
-                    // First one is header, skip it.
-                    items = items.slice(1..);
-                }
-                Inline::Extended => {
-                    // Extended.
-                    items = itg.children("tr");
-                }
-                Inline::Thumbnail => {
-                    // Thumbnail.
-                    items = itg.find(".gl1t")
-                }
+        let inline_set = root.find(r#".searchnav select[onchange*=inline_set]"#);
+        let inline_set = InlineSet::parse(&inline_set.outer_html())?;
+
+        // parses gallery info.
+        let itg = root.find(".itg");
+
+        // there are several styles of itg.
+        let mut items;
+        match inline_set {
+            InlineSet::Minimal | InlineSet::MinimalPlus | InlineSet::Compact => {
+                // Minimal or Minimal+ or Compact.
+                items = itg.children("tr");
+                // First one is header, skip it.
+                items = items.slice(1..);
             }
-
-            let mut gallery_info_vec = Vec::new();
-            for item in items {
-                gallery_info_vec.push(GalleryInfo::parse(&item.outer_html(), &inline)?);
+            InlineSet::Extended => {
+                // Extended.
+                items = itg.children("tr");
             }
-
-            Ok(GalleryList {
-                next,
-                jump,
-                seek,
-                gallery_info_vec,
-            })
-        } else {
-            Err(String::from("parses gallery list fail."))
+            InlineSet::Thumbnail => {
+                // Thumbnail.
+                items = itg.find(".gl1t")
+            }
         }
+
+        let mut gallery_info_vec = Vec::new();
+        for item in items {
+            gallery_info_vec.push(GalleryInfo::parse(&item.outer_html())?);
+        }
+
+        Ok(GalleryList {
+            next,
+            jump,
+            seek,
+            gallery_info_vec,
+        })
     }
 }
 
-const PATTERN_NEXT_PAGE: &str = r#"page=(\d+)"#;
+// const PATTERN_NEXT_PAGE: &str = r#"page=(\d+)"#;
 
 #[cfg(test)]
 mod tests {

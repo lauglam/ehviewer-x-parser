@@ -1,6 +1,6 @@
 use std::iter::zip;
 use visdom::Vis;
-use crate::structures::detail::GalleryComment;
+use crate::{EhResult, Parser, structures::detail::GalleryComment};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryCommentList {
@@ -8,7 +8,7 @@ pub struct GalleryCommentList {
     pub has_more: bool,
 }
 
-impl GalleryCommentList {
+impl Parser for GalleryCommentList {
     /// ```html
     /// <div id="cdiv" class="gm">
     ///     <!-- uploader comment -->
@@ -36,8 +36,8 @@ impl GalleryCommentList {
     ///     </div>
     /// </div>
     /// ```
-    pub fn parse(ele: &str) -> Result<GalleryCommentList, String> {
-        let root = Vis::load(ele).map_err(|_| String::from("parses gallery comment list fail."))?;
+    fn parse(doc: &str) -> EhResult<Self> {
+        let root = Vis::load(doc)?;
 
         let mut comment_vec = Vec::new();
         let cas = root.find(r#"a[name^=c][name!=cnew]"#);

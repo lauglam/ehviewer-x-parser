@@ -1,8 +1,10 @@
 mod gallery_api;
 mod gallery_list;
 mod gallery_info;
-mod inline;
+mod inline_set;
 
-pub use gallery_info::GalleryInfo;
-pub use gallery_list::GalleryList;
-pub use inline::Inline;
+pub use {
+    gallery_info::GalleryInfo,
+    gallery_list::GalleryList,
+    inline_set::InlineSet,
+};

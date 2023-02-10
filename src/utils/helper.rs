@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use crate::EhResult;
 
 #[inline]
 pub fn unescape(str: &str) -> Cow<str> {
@@ -25,27 +26,23 @@ pub fn trim(str: &str) -> Cow<str> {
 }
 
 #[inline]
-pub fn parse_u32(str: &str) -> Result<u32, String> {
-    trim(str).parse::<u32>()
-        .map_err(|e| format!("{}: {}", e.to_string(), str))
+pub fn parse_u32(str: &str) -> EhResult<u32> {
+    Ok(trim(str).parse::<u32>()?)
 }
 
 #[inline]
-pub fn parse_i32(str: &str) -> Result<i32, String> {
-    trim(str).parse::<i32>()
-        .map_err(|e| format!("{}: {}", e.to_string(), str))
+pub fn parse_i32(str: &str) -> EhResult<i32> {
+    Ok(trim(str).parse::<i32>()?)
 }
 
 #[inline]
-pub fn parse_u64(str: &str) -> Result<u64, String> {
-    trim(str).parse::<u64>()
-        .map_err(|e| format!("{}: {}", e.to_string(), str))
+pub fn parse_u64(str: &str) -> EhResult<u64> {
+    Ok(trim(str).parse::<u64>()?)
 }
 
 #[inline]
-pub fn parse_f32(str: &str) -> Result<f32, String> {
-    trim(str).parse::<f32>()
-        .map_err(|e| format!("{}: {}", e.to_string(), str))
+pub fn parse_f32(str: &str) -> EhResult<f32> {
+    Ok(trim(str).parse::<f32>()?)
 }
 
 #[cfg(test)]

@@ -1,6 +1,11 @@
 use regex::Regex;
 use visdom::Vis;
-use crate::utils::parse_u32;
+use crate::{
+    EhResult,
+    ParseError,
+    Parser,
+    utils::parse_u32,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryDetailDetail {
@@ -13,7 +18,7 @@ pub struct GalleryDetailDetail {
     pub favorite_count: u32,
 }
 
-impl GalleryDetailDetail {
+impl Parser for GalleryDetailDetail {
     /// <table>
     ///     <tr>
     ///         <td class="gdt1">Posted:</td>
@@ -21,88 +26,87 @@ impl GalleryDetailDetail {
     ///     </tr>
     ///     ...
     /// </table>
-    pub fn parse(table: &str) -> Result<GalleryDetailDetail, String> {
+    fn parse(doc: &str) -> EhResult<Self> {
         const PATTERN_PAGES: &str = r#"(\d+) pages"#;
         const PATTERN_FAVORITE_COUNT: &str = r#"(\d+) times"#;
 
-        if let Ok(root) = Vis::load(table) {
-            let gdt1s = root.find(".gdt1");
+        let root = Vis::load(doc)?;
+        let gdt1s = root.find(".gdt1");
 
-            let (
-                mut posted,
-                mut parent_opt,
-                mut visible,
-                mut language,
-                mut file_size,
-                mut pages,
-                mut favorite_count
-            ) = (None, None, None, None, None, None, None);
+        let (
+            mut posted,
+            mut parent_opt,
+            mut visible,
+            mut language,
+            mut file_size,
+            mut pages,
+            mut favorite_count
+        ) = (None, None, None, None, None, None, None);
 
-            for gdt1 in gdt1s {
-                match gdt1.text().as_str() {
-                    "Posted:" => {
-                        let gdt2 = gdt1.next_element_sibling().unwrap();
-                        posted = Some(gdt2.text());
-                    }
-                    "Parent:" => {
-                        let gdt2 = gdt1.next_element_sibling().unwrap();
-
-                        if let Some(href) = gdt2.get_attribute("href") {
-                            parent_opt = Some(href.to_string());
-                        }
-                    }
-                    "Visible:" => {
-                        let gdt2 = gdt1.next_element_sibling().unwrap();
-                        visible = Some(gdt2.text());
-                    }
-                    "Language:" => {
-                        let gdt2 = gdt1.next_element_sibling().unwrap();
-                        language = Some(gdt2.text());
-                    }
-                    "File Size:" => {
-                        let gdt2 = gdt1.next_element_sibling().unwrap();
-                        file_size = Some(gdt2.text());
-                    }
-                    "Length:" => {
-                        let gdt2 = gdt1.next_element_sibling().unwrap();
-                        let gdt2 = gdt2.text();
-
-                        let regex = Regex::new(PATTERN_PAGES).unwrap();
-                        let captures = regex.captures(&gdt2).unwrap();
-                        pages = Some(parse_u32(&captures[1])?);
-                    }
-                    "Favorited:" => {
-                        let gdt2 = gdt1.next_element_sibling().unwrap();
-                        let gdt2 = gdt2.text();
-
-                        let regex = Regex::new(PATTERN_FAVORITE_COUNT).unwrap();
-                        let captures = regex.captures(&gdt2).unwrap();
-                        favorite_count = Some(parse_u32(&captures[1])?);
-                    }
-                    _ => {}
+        for gdt1 in gdt1s {
+            match gdt1.text().as_str() {
+                "Posted:" => {
+                    let gdt2 = gdt1.next_element_sibling().unwrap();
+                    posted = Some(gdt2.text());
                 }
-            }
+                "Parent:" => {
+                    let gdt2 = gdt1.next_element_sibling().unwrap();
 
-            if let (
-                Some(posted),
-                Some(visible),
-                Some(language),
-                Some(file_size),
-                Some(pages),
-                Some(favorite_count)
-            ) = (posted, visible, language, file_size, pages, favorite_count) {
-                return Ok(GalleryDetailDetail {
-                    posted,
-                    parent_opt,
-                    visible,
-                    language,
-                    file_size,
-                    pages,
-                    favorite_count,
-                });
+                    if let Some(href) = gdt2.get_attribute("href") {
+                        parent_opt = Some(href.to_string());
+                    }
+                }
+                "Visible:" => {
+                    let gdt2 = gdt1.next_element_sibling().unwrap();
+                    visible = Some(gdt2.text());
+                }
+                "Language:" => {
+                    let gdt2 = gdt1.next_element_sibling().unwrap();
+                    language = Some(gdt2.text());
+                }
+                "File Size:" => {
+                    let gdt2 = gdt1.next_element_sibling().unwrap();
+                    file_size = Some(gdt2.text());
+                }
+                "Length:" => {
+                    let gdt2 = gdt1.next_element_sibling().unwrap();
+                    let gdt2 = gdt2.text();
+
+                    let regex = Regex::new(PATTERN_PAGES).unwrap();
+                    let captures = regex.captures(&gdt2).unwrap();
+                    pages = Some(parse_u32(&captures[1])?);
+                }
+                "Favorited:" => {
+                    let gdt2 = gdt1.next_element_sibling().unwrap();
+                    let gdt2 = gdt2.text();
+
+                    let regex = Regex::new(PATTERN_FAVORITE_COUNT).unwrap();
+                    let captures = regex.captures(&gdt2).unwrap();
+                    favorite_count = Some(parse_u32(&captures[1])?);
+                }
+                _ => unreachable!()
             }
         }
 
-        Err(String::from("parses gallery detail detail fail."))
+        if let (
+            Some(posted),
+            Some(visible),
+            Some(language),
+            Some(file_size),
+            Some(pages),
+            Some(favorite_count)
+        ) = (posted, visible, language, file_size, pages, favorite_count) {
+            Ok(GalleryDetailDetail {
+                posted,
+                parent_opt,
+                visible,
+                language,
+                file_size,
+                pages,
+                favorite_count,
+            })
+        } else {
+            Err(ParseError::DomNotFound("gdt1"))
+        }
     }
 }

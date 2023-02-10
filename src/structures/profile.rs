@@ -1,5 +1,5 @@
 use visdom::Vis;
-use crate::eh_url;
+use crate::{eh_url, EhResult, ParseError, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct Profile {
@@ -7,27 +7,23 @@ pub struct Profile {
     pub avatar: String,
 }
 
-impl Profile {
-    pub fn parse(doc: &str) -> Result<Profile, String> {
-        if let Ok(root) = Vis::load(doc) {
-            let display_name = root.find("#profilename > font");
-            let display_name = display_name.text();
+impl Parser for Profile {
+    fn parse(doc: &str) -> EhResult<Self> {
+        let root = Vis::load(doc)?;
+        let display_name = root.find("#profilename > font");
+        let display_name = display_name.text();
 
-            let avatar = root.find(r#".ipbtable img"#);
-            if let Some(avatar) = avatar.attr("src") {
-                let mut avatar = avatar.to_string();
-                if !avatar.starts_with("http") {
-                    avatar = format!("{}{}", eh_url::URL_FORUMS, avatar);
-                }
-
-                return Ok(Profile {
-                    display_name,
-                    avatar,
-                });
-            }
+        let avatar = root.find(r#".ipbtable img"#);
+        let avatar = avatar.attr("src").ok_or(ParseError::AttributeNotFound("src"))?;
+        let mut avatar = avatar.to_string();
+        if !avatar.starts_with("http") {
+            avatar = format!("{}{}", eh_url::URL_FORUMS, avatar);
         }
 
-        Err(String::from("parses profile fail."))
+        Ok(Profile {
+            display_name,
+            avatar,
+        })
     }
 }
 

@@ -1,9 +1,14 @@
 use regex::Regex;
-use visdom::Vis;
-use crate::utils::parse_u32;
-use crate::structures::detail::{
-    GalleryPreviewLarge,
-    GalleryPreviewMedium,
+use visdom::{Vis, types::Elements};
+use crate::{
+    EhResult,
+    ParseError,
+    Parser,
+    utils::parse_u32,
+    structures::detail::{
+        GalleryPreviewLarge,
+        GalleryPreviewMedium,
+    },
 };
 
 #[derive(Debug, PartialEq)]
@@ -12,7 +17,7 @@ pub enum GalleryPreviewSet {
     Medium(Vec<GalleryPreviewMedium>),
 }
 
-impl GalleryPreviewSet {
+impl Parser for GalleryPreviewSet {
     /// 1. Medium preview set.
     /// ```html
     /// <div id="gdt">
@@ -50,11 +55,15 @@ impl GalleryPreviewSet {
     ///     <div class="c"></div>
     /// </div>
     /// ```
-    pub fn parse(ele: &str, is_large: bool) -> Result<GalleryPreviewSet, String> {
-        if is_large {
-            Ok(GalleryPreviewSet::Large(parse_large(ele)?))
-        } else {
-            Ok(GalleryPreviewSet::Medium(parse_medium(ele)?))
+    fn parse(doc: &str) -> EhResult<Self> {
+        let root = Vis::load(doc)?;
+        let gdt = root.find("#gdt > div:first-child");
+        let kind = gdt.attr("class").ok_or(ParseError::AttributeNotFound("class"))?;
+
+        match kind.to_string().as_str() {
+            r#"gdtl"# => Ok(GalleryPreviewSet::Large(parse_large(&root)?)),
+            r#"gdtm"# => Ok(GalleryPreviewSet::Medium(parse_medium(doc)?)),
+            _ => unreachable!(),
         }
     }
 }
@@ -73,12 +82,7 @@ impl GalleryPreviewSet {
 ///     <div class="c"></div>
 /// </div>
 /// ```
-fn parse_large(ele: &str) -> Result<Vec<GalleryPreviewLarge>, String> {
-    // const PATTERN_PREVIEW_PAGES: &str = r#"<td[^>]+><a[^>]+>([\d,]+)</a></td><td[^>]+>(?:<a[^>]+>)?&gt;(?:</a>)?</td>"#;
-    // const PATTERN_LARGE_PREVIEW: &str = r#"<div class="gdtl".+?<a href="(.+?)"><img alt="([\d,]+)".+?src="(.+?)""#;
-
-    let root = Vis::load(ele).map_err(|_| String::from("parses gallery preview set large fail."))?;
-
+fn parse_large(root: &Elements) -> Result<Vec<GalleryPreviewLarge>, ParseError> {
     let mut preview_vec = Vec::new();
     let gdt_larges = root.children(r#".gdtl"#);
     for gdt_large in gdt_larges {
@@ -87,6 +91,9 @@ fn parse_large(ele: &str) -> Result<Vec<GalleryPreviewLarge>, String> {
 
     Ok(preview_vec)
 }
+
+// const PATTERN_PREVIEW_PAGES: &str = r#"<td[^>]+><a[^>]+>([\d,]+)</a></td><td[^>]+>(?:<a[^>]+>)?&gt;(?:</a>)?</td>"#;
+// const PATTERN_LARGE_PREVIEW: &str = r#"<div class="gdtl".+?<a href="(.+?)"><img alt="([\d,]+)".+?src="(.+?)""#;
 
 /// ```html
 /// <div id="gdt">
@@ -108,13 +115,11 @@ fn parse_large(ele: &str) -> Result<Vec<GalleryPreviewLarge>, String> {
 ///     <div class="c"></div>
 /// </div>
 /// ```
-fn parse_medium(ele: &str) -> Result<Vec<GalleryPreviewMedium>, String> {
-    const PATTERN_MEDIUM_PREVIEW: &str = r#"<div class="gdtm"[^<>]*><div[^<>]*width:(\d+)[^<>]*height:(\d+)[^<>]*\((.+?)\)[^<>]*-(\d+)px[^<>]*><a[^<>]*href="(.+?)"[^<>]*><img alt="([\d,]+)"[^<>]*title="Page \d+: ([\w\s]+.[\w]+)""#;
-
+fn parse_medium(doc: &str) -> Result<Vec<GalleryPreviewMedium>, ParseError> {
     let mut preview_vec = Vec::new();
 
     let regex = Regex::new(PATTERN_MEDIUM_PREVIEW).unwrap();
-    for cap in regex.captures_iter(ele) {
+    for cap in regex.captures_iter(doc) {
         let clip_width = parse_u32(&cap[1])?;
         let clip_height = parse_u32(&cap[2])?;
         let image_url = String::from(&cap[3]);
@@ -141,12 +146,14 @@ fn parse_medium(ele: &str) -> Result<Vec<GalleryPreviewMedium>, String> {
     Ok(preview_vec)
 }
 
+const PATTERN_MEDIUM_PREVIEW: &str = r#"<div class="gdtm"[^<>]*><div[^<>]*width:(\d+)[^<>]*height:(\d+)[^<>]*\((.+?)\)[^<>]*-(\d+)px[^<>]*><a[^<>]*href="(.+?)"[^<>]*><img alt="([\d,]+)"[^<>]*title="Page \d+: ([\w\s]+.[\w]+)""#;
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn parse_preview_large_test() {
+    fn parse_preview_set_test() {
         let ele = r#"
             <div id="gdt">
                 <div class="gdtl" style="height:307px"><a href="https://e-hentai.org/s/5bf9580b3b/1496103-1"><img alt="01"
@@ -161,11 +168,8 @@ mod tests {
             </div>
         "#;
 
-        assert_eq!(GalleryPreviewSet::parse(ele, true).is_ok(), true);
-    }
+        assert_eq!(GalleryPreviewSet::parse(ele).is_ok(), true);
 
-    #[test]
-    fn parse_preview_medium_test() {
         let ele = r#"
             <div id="gdt">
                 <div class="gdtm" style="height:167px">
@@ -186,6 +190,6 @@ mod tests {
             </div>
         "#;
 
-        assert_eq!(GalleryPreviewSet::parse(ele, false).is_ok(), true);
+        assert_eq!(GalleryPreviewSet::parse(ele).is_ok(), true);
     }
 }

@@ -1,12 +1,12 @@
 use visdom::Vis;
-use crate::structures::GalleryTagGroup;
+use crate::{EhResult, Parser, structures::GalleryTagGroup};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryTagGroupList {
     pub group_vec: Vec<GalleryTagGroup>,
 }
 
-impl GalleryTagGroupList {
+impl Parser for GalleryTagGroupList {
     /// ```html
     /// <div id="taglist">
     ///     <table>
@@ -27,8 +27,8 @@ impl GalleryTagGroupList {
     ///     </table>
     /// </div>
     /// ```
-    pub fn parse(ele: &str) -> Result<GalleryTagGroupList, String> {
-        let root = Vis::load(ele).map_err(|_| String::from("parses gallery tag group list fail."))?;
+    fn parse(doc: &str) -> EhResult<Self> {
+        let root = Vis::load(doc)?;
 
         let mut group_vec = Vec::new();
         let trs = root.find("tr");

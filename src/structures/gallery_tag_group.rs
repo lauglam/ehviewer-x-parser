@@ -1,4 +1,5 @@
 use visdom::Vis;
+use crate::{EhResult, ParseError, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryTagGroup {
@@ -12,7 +13,7 @@ impl ToString for GalleryTagGroup {
     }
 }
 
-impl GalleryTagGroup {
+impl Parser for GalleryTagGroup {
     /// ```html
     /// <tr><td class="tc">parody:</td><td><div class="gtl" title="parody:senran kagura">senran kagura</div><div class="gtl" title="parody:the idolmaster">the idolmaster</div></td></tr>
     ///                    ^                                                             ^                                                                 ^
@@ -24,27 +25,27 @@ impl GalleryTagGroup {
     ///                    ^                                                                                                                                                                                                                                                ^
     ///                    tag_group_name                                                                                                                                                                                                                                   tag_vec[0]
     /// ```
-    pub fn parse(ele: &str) -> Result<GalleryTagGroup, String> {
-        // const PATTERN_TAG_GROUP: &str = r#"<tr><td[^<>]+>([\w\s]+):</td><td>(?:<div[^<>]+><a[^<>]+>[\w\s]+</a></div>)+</td></tr>"#;
-        // const PATTERN_TAG: &str = r#"<div[^<>]+><a[^<>]+>([\w\s]+)</a></div>"#;
+    fn parse(doc: &str) -> EhResult<Self> {
+        let root = Vis::load(doc)?;
+        let tag_group_name = root.find(".tc").text();
+        let tag_group_name = String::from(&tag_group_name[..tag_group_name.len() - 1]);
 
-        if let Ok(root) = Vis::load(ele) {
-            let tag_group_name = root.find(".tc").text();
-            let tag_group_name = String::from(&tag_group_name[..tag_group_name.len() - 1]);
+        // gt or gtl.
+        let tag_vec = root.find("[class^=gt]").map(|_, ele| ele.text());
 
-            // gt or gtl.
-            let tag_vec = root.find("[class^=gt]").map(|_, ele| ele.text());
-            if !tag_group_name.is_empty() && !tag_vec.is_empty() {
-                return Ok(GalleryTagGroup {
-                    tag_group_name,
-                    tag_vec,
-                });
-            }
+        if !tag_group_name.is_empty() && !tag_vec.is_empty() {
+            Ok(GalleryTagGroup {
+                tag_group_name,
+                tag_vec,
+            })
+        } else {
+            Err(ParseError::DomNotFound(".tc or [class^=gt]"))
         }
-
-        Err(String::from("parses gallery tag group fail."))
     }
 }
+
+// const PATTERN_TAG_GROUP: &str = r#"<tr><td[^<>]+>([\w\s]+):</td><td>(?:<div[^<>]+><a[^<>]+>[\w\s]+</a></div>)+</td></tr>"#;
+// const PATTERN_TAG: &str = r#"<div[^<>]+><a[^<>]+>([\w\s]+)</a></div>"#;
 
 #[cfg(test)]
 mod tests {

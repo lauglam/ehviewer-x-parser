@@ -1,7 +1,12 @@
 use chrono::DateTime;
 use regex::Regex;
 use visdom::Vis;
-use crate::utils::{parse_u32, parse_u64};
+use crate::{
+    EhResult,
+    ParseError,
+    Parser,
+    utils::{parse_u32, parse_u64},
+};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryComment {
@@ -33,7 +38,7 @@ impl ToString for GalleryComment {
     }
 }
 
-impl GalleryComment {
+impl Parser for GalleryComment {
     /// 1. Uploader Comment
     /// ```html
     /// <!-- uploader comment -->
@@ -80,14 +85,14 @@ impl GalleryComment {
     ///         <span>sakkijarven +2</span>, <span>无证萝莉控 +6</span>, <span>DaweiX +4</span>, and 38 more...</div>
     /// </div>
     /// ```
-    pub fn parse(ele: &str) -> Result<GalleryComment, String> {
+    fn parse(doc: &str) -> EhResult<Self> {
         const PATTERN_COMMENT_ID: &str = r#"<a name="c(\d+)"></a>"#;
         const PATTERN_COMMENT_DATETIME: &str = r#"Posted\s*on\s*(.+?)\s*by"#;
 
-        let root = Vis::load(ele).map_err(|_| String::from("parses gallery comment fail."))?;
+        let root = Vis::load(doc)?;
 
         let regex = Regex::new(PATTERN_COMMENT_ID).unwrap();
-        let captures = regex.captures(ele).ok_or(String::from("parses gallery comment fail."))?;
+        let captures = regex.captures(doc).ok_or(ParseError::RegexMatchFailed)?;
 
         // c0 is uploader comment. cannot vote.
         // id.
@@ -98,11 +103,11 @@ impl GalleryComment {
 
         // posted_timestamp.
         let regex = Regex::new(PATTERN_COMMENT_DATETIME).unwrap();
-        let captures = regex.captures(&posted).ok_or(String::from("parses gallery comment fail."))?;
+        let captures = regex.captures(&posted).ok_or(ParseError::RegexMatchFailed)?;
 
         let fmt = "%d %B %Y, %H:%M:%S%.3f %z";
         let date_str = format!("{}:00.000 +0000", &captures[1]);
-        let datetime = DateTime::parse_from_str(&date_str, fmt).unwrap();
+        let datetime = DateTime::parse_from_str(&date_str, fmt)?;
         let posted_timestamp = datetime.timestamp();
 
         // user.

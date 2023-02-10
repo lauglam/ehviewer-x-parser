@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::{EhResult, Parser};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RateGallery {
@@ -8,8 +9,8 @@ pub struct RateGallery {
     pub rating_count: i32,
 }
 
-impl RateGallery {
-    pub fn parse(json: &str) -> Result<RateGallery, String> {
-        serde_json::from_str::<RateGallery>(json).map_err(|_| String::from("parses rate gallery fail."))
+impl Parser for RateGallery{
+    fn parse(doc: &str) -> EhResult<Self> {
+        Ok(serde_json::from_str(doc)?)
     }
 }
