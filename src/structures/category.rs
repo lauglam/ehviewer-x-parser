@@ -61,15 +61,16 @@ impl From<u32> for Category {
 }
 
 // Use it for homepage
-const NONE: i8 = -1;
+// const NONE: i8 = -1;
 
-const ALL_CATEGORY: u32 = VALUE_UNKNOWN - 1;
+// const ALL_CATEGORY: u32 = VALUE_UNKNOWN - 1;
 
 
 // Remove [XXX], (XXX), {XXX}, ~XXX~ stuff
-const PATTERN_TITLE_PREFIX: &str = r#"^(?:(?:\([^\)]*\))|(?:\[[^\]]*\])|(?:\{[^\}]*\})|(?:~[^~]*~)|\s+)*"#;
+// const PATTERN_TITLE_PREFIX: &str = r#"^(?:(?:\([^\)]*\))|(?:\[[^\]]*\])|(?:\{[^\}]*\})|(?:~[^~]*~)|\s+)*"#;
+
 // Remove [XXX], (XXX), {XXX}, ~XXX~ stuff and something like ch. 1-23
-const PATTERN_TITLE_SUFFIX: &str = r#"(?:\s+ch.[\s\d-]+)?(?:(?:\([^\)]*\))|(?:\[[^\]]*\])|(?:\{[^\}]*\})|(?:~[^~]*~)|\s+)*$"#;
+// const PATTERN_TITLE_SUFFIX: &str = r#"(?:\s+ch.[\s\d-]+)?(?:(?:\([^\)]*\))|(?:\[[^\]]*\])|(?:\{[^\}]*\})|(?:~[^~]*~)|\s+)*$"#;
 
 // DOUJINSHI|MANGA|ARTIST_CG|GAME_CG|WESTERN|NON_H|IMAGE_SET|COSPLAY|ASIAN_PORN|MISC;
 

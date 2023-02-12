@@ -38,3 +38,15 @@ impl Parser for Archive {
 
 const PATTERN_FORM: &str = r#"<form id="hathdl_form" action="[^"]*?or=([^="]*?)" method="post">"#;
 const PATTERN_ARCHIVE: &str = r#"<a href="[^"]*" onclick="return do_hathdl\('([0-9]+|org)'\)">([^<]+)</a>"#;
+
+#[cfg(test)]
+mod tests {
+    use crate::utils::test::read_test_file;
+    use super::*;
+
+    #[test]
+    fn parse_test() {
+        let doc = read_test_file("archive.html");
+        assert_eq!(Archive::parse(&doc).is_ok(), true);
+    }
+}

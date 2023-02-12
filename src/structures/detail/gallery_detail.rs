@@ -229,12 +229,6 @@ mod tests {
         assert_eq!(GalleryDetail::parse(&doc).is_ok(), true);
     }
 
-    // #[test]
-    // fn parse_cover_style_test() {
-    //     let style = r#"width:250px; height:354px; background:transparent url(https://ehgt.org/8f/3e/8f3ed3234614db3932038b8d7c80a6fd17fe2c41-2942019-2828-4000-jpg_250.jpg) no-repeat"#;
-    //     assert_eq!(parse_cover_style(style).unwrap(), r#"https://ehgt.org/8f/3e/8f3ed3234614db3932038b8d7c80a6fd17fe2c41-2942019-2828-4000-jpg_250.jpg"#);
-    // }
-
     #[test]
     fn parse_detail_test() {
         let table = r#"

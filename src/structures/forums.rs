@@ -31,7 +31,7 @@ mod tests {
 
     #[test]
     fn forums_parse_test() {
-        let doc = read_test_file("forum.html");
+        let doc = read_test_file("forums.html");
         assert_eq!(Forums::parse(&doc).is_ok(), true);
     }
 }

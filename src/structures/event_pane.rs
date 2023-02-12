@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use visdom::Vis;
 use crate::{EhResult, Parser};
 

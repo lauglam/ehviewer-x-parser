@@ -86,6 +86,9 @@ mod tests {
         let doc = read_test_file("gallery_list_minimal.html");
         let result = GalleryList::parse(&doc);
 
+        let doc = read_test_file("gallery_list_minimal_plus.html");
+        let result = GalleryList::parse(&doc);
+
         let doc = read_test_file("gallery_list_compact.html");
         let result = GalleryList::parse(&doc);
 

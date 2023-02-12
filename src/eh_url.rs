@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::const_concat;
 
 pub const SITE_E: usize = 0;
