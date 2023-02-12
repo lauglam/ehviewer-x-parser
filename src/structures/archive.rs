@@ -15,9 +15,6 @@ pub struct Item {
 
 impl Parser for Archive {
     fn parse(doc: &str) -> EhResult<Self> {
-        const PATTERN_FORM: &str = r#"<form id="hathdl_form" action="[^"]*?or=([^="]*?)" method="post">"#;
-        const PATTERN_ARCHIVE: &str = r#"<a href="[^"]*" onclick="return do_hathdl\('([0-9]+|org)'\)">([^<]+)</a>"#;
-
         let regex = Regex::new(PATTERN_FORM).unwrap();
         let captures = regex.captures(doc).ok_or(ParseError::RegexMatchFailed)?;
         let or = String::from(&captures[1]);
@@ -38,3 +35,6 @@ impl Parser for Archive {
         Ok(Archive { or, items })
     }
 }
+
+const PATTERN_FORM: &str = r#"<form id="hathdl_form" action="[^"]*?or=([^="]*?)" method="post">"#;
+const PATTERN_ARCHIVE: &str = r#"<a href="[^"]*" onclick="return do_hathdl\('([0-9]+|org)'\)">([^<]+)</a>"#;
