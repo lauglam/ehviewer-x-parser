@@ -1,5 +1,5 @@
 use regex::Regex;
-use crate::{EhResult, ParseError, Parser};
+use crate::{EhResult, ParseError, Parser, REGEX_MATCH_FAILED};
 
 #[derive(Debug, PartialEq)]
 pub struct SignIn {
@@ -26,7 +26,7 @@ impl Parser for SignIn {
 
                 Err(ParseError::FromServer(error))
             } else {
-                Err(ParseError::RegexMatchFailed)
+                Err(REGEX_MATCH_FAILED)
             }
         }
     }
@@ -37,7 +37,7 @@ const ERROR_PATTERN: &str = r#"(?:<h4>The error returned was:</h4>\s*<p>(.+?)</p
 
 #[cfg(test)]
 mod tests {
-    use crate::utils::test::read_test_file;
+    use crate::test_helper::read_test_file;
     use super::*;
 
     #[test]

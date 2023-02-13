@@ -204,27 +204,27 @@ pub const COMMENTS_SORT_RECENT_FIRST: &str = "d";
  */
 pub const COMMENTS_SORT_HIGHEST_SCORE_FIRST: &str = "s";
 /**
- * Show gallery comment votes On score hover or click
+ * Show gallery_list comment votes On score hover or click
  */
 pub const COMMENTS_VOTES_POP: &str = "0";
 /**
- * Always show gallery comment votes
+ * Always show gallery_list comment votes
  */
 pub const COMMENTS_VOTES_ALWAYS: &str = "1";
 /**
- * Sort order for gallery tags alphabetically
+ * Sort order for gallery_list tags alphabetically
  */
 pub const TAGS_SORT_ALPHABETICAL: &str = "a";
 /**
- * Sort order for gallery tags by tag power
+ * Sort order for gallery_list tags by tag power
  */
 pub const TAGS_SORT_POWER: &str = "p";
 /**
- * Show gallery page numbers
+ * Show gallery_list page numbers
  */
 pub const SHOW_GALLERY_INDEX_YES: &str = "1";
 /**
- * Do not show gallery page numbers
+ * Do not show gallery_list page numbers
  */
 pub const SHOW_GALLERY_INDEX_NO: &str = "0";
 /**
@@ -292,7 +292,7 @@ pub const CONTENT_WARNING_SHOW: &str = "0";
  */
 pub const CONTENT_WARNING_NOT_SHOW: &str = "1";
 /**
- * Default gallery title
+ * Default gallery_list title
  */
 const GALLERY_TITLE_DEFAULT: &str = "r";
 /**
@@ -300,7 +300,7 @@ const GALLERY_TITLE_DEFAULT: &str = "r";
  */
 const POPULAR_YES: &str = "y";
 /**
- * Sort favorites by last gallery update time
+ * Sort favorites by last gallery_list update time
  */
 const FAVORITES_SORT_FAVORITED_TIME: &str = "f";
 /**
@@ -426,7 +426,7 @@ pub static previewSize: Lazy<Mutex<&str>> = Lazy::new(|| Mutex::new(PREVIEW_SIZE
 pub static previewRow: Lazy<Mutex<&str>> = Lazy::new(|| Mutex::new(PREVIEW_ROW_4));
 
 /**
- * Sort order for gallery comments<br/>
+ * Sort order for gallery_list comments<br/>
  * key: {@link #KEY_COMMENTS_SORT}<br/>
  * value: {@link #COMMENTS_SORT_OLDEST_FIRST}, {@link #COMMENTS_SORT_RECENT_FIRST},
  * {@link #COMMENTS_SORT_HIGHEST_SCORE_FIRST}
@@ -434,7 +434,7 @@ pub static previewRow: Lazy<Mutex<&str>> = Lazy::new(|| Mutex::new(PREVIEW_ROW_4
 pub static commentSort: Lazy<Mutex<&str>> = Lazy::new(|| Mutex::new(COMMENTS_SORT_OLDEST_FIRST));
 
 /**
- * Show gallery comment votes mode<br/>
+ * Show gallery_list comment votes mode<br/>
  * key: {@link #KEY_COMMENTS_VOTES}<br/>
  * value: {@link #COMMENTS_VOTES_POP}, {@link #COMMENTS_VOTES_ALWAYS}
  */
@@ -442,14 +442,14 @@ pub static commentVotes: Lazy<Mutex<&str>> = Lazy::new(|| Mutex::new(COMMENTS_VO
 
 
 /**
- * Sort order for gallery tags<br/>
+ * Sort order for gallery_list tags<br/>
  * key: {@link #KEY_TAGS_SORT}<br/>
  * value: {@link #TAGS_SORT_ALPHABETICAL}, {@link #TAGS_SORT_POWER}
  */
 pub static tagSort: Lazy<Mutex<&str>> = Lazy::new(|| Mutex::new(TAGS_SORT_ALPHABETICAL));
 
 /**
- * Show gallery page numbers<br/>
+ * Show gallery_list page numbers<br/>
  * key: {@link #KEY_SHOW_GALLERY_INDEX}<br/>
  * value: {@link #SHOW_GALLERY_INDEX_YES}, {@link #SHOW_GALLERY_INDEX_NO}
  */

@@ -1,5 +1,5 @@
 use regex::Regex;
-use crate::{EhResult, ParseError, Parser, utils::unescape};
+use crate::{EhResult, Parser, REGEX_MATCH_FAILED, unescape::unescape};
 
 #[derive(Debug, PartialEq)]
 pub struct Archive {
@@ -16,7 +16,7 @@ pub struct Item {
 impl Parser for Archive {
     fn parse(doc: &str) -> EhResult<Self> {
         let regex = Regex::new(PATTERN_FORM).unwrap();
-        let captures = regex.captures(doc).ok_or(ParseError::RegexMatchFailed)?;
+        let captures = regex.captures(doc).ok_or(REGEX_MATCH_FAILED)?;
         let or = String::from(&captures[1]);
 
         let regex = Regex::new(PATTERN_ARCHIVE).unwrap();
@@ -41,7 +41,7 @@ const PATTERN_ARCHIVE: &str = r#"<a href="[^"]*" onclick="return do_hathdl\('([0
 
 #[cfg(test)]
 mod tests {
-    use crate::utils::test::read_test_file;
+    use crate::test_helper::read_test_file;
     use super::*;
 
     #[test]

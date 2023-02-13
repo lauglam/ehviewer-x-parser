@@ -1,5 +1,5 @@
 use regex::Regex;
-use crate::{EhResult, ParseError, Parser};
+use crate::{EhResult, Parser, REGEX_MATCH_FAILED};
 
 #[derive(Debug, PartialEq)]
 pub struct Torrent {
@@ -10,7 +10,7 @@ pub struct Torrent {
 impl Parser for Torrent {
     fn parse(doc: &str) -> EhResult<Self> {
         let regex = Regex::new(PATTERN_TORRENT).unwrap();
-        let captures = regex.captures(doc).ok_or(ParseError::RegexMatchFailed)?;
+        let captures = regex.captures(doc).ok_or(REGEX_MATCH_FAILED)?;
 
         let download_url = String::from(&captures[1]);
         let filename = String::from(&captures[2]);

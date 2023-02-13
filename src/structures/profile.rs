@@ -1,5 +1,5 @@
 use visdom::Vis;
-use crate::{eh_url, EhResult, ParseError, Parser};
+use crate::{ATTRIBUTE_NOT_FOUND, eh_url, EhResult, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct Profile {
@@ -14,7 +14,7 @@ impl Parser for Profile {
         let display_name = display_name.text();
 
         let avatar = root.find(r#".ipbtable img"#);
-        let avatar = avatar.attr("src").ok_or(ParseError::AttributeNotFound("src"))?;
+        let avatar = avatar.attr("src").ok_or(ATTRIBUTE_NOT_FOUND)?;
         let mut avatar = avatar.to_string();
         if !avatar.starts_with("http") {
             avatar = format!("{}{}", eh_url::URL_FORUMS, avatar);
@@ -30,7 +30,7 @@ impl Parser for Profile {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::test::read_test_file;
+    use crate::test_helper::read_test_file;
     use crate::eh_url;
 
     #[test]

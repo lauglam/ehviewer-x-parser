@@ -1,12 +1,5 @@
 use regex::Regex;
-use crate::{
-    const_concat,
-    eh_url,
-    EhResult,
-    Parser,
-    ParseError,
-    utils::{parse_u32, parse_u64},
-};
+use crate::{const_concat, eh_url, EhResult, Parser, REGEX_MATCH_FAILED};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryPageUrl {
@@ -21,10 +14,10 @@ impl Parser for GalleryPageUrl {
     /// ```
     fn parse(doc: &str) -> EhResult<Self> {
         let regex = Regex::new(URL_STRICT_PATTERN).unwrap();
-        let captures = regex.captures(doc).ok_or(ParseError::RegexMatchFailed)?;
+        let captures = regex.captures(doc).ok_or(REGEX_MATCH_FAILED)?;
         let p_token = String::from(&captures[1]);
-        let gid = parse_u64(&captures[2])?;
-        let page = parse_u32(&captures[3])? - 1;
+        let gid = captures[2].parse()?;
+        let page = captures[3].parse::<u32>()? - 1;
 
         Ok(GalleryPageUrl {
             gid,

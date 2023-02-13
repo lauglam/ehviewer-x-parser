@@ -1,6 +1,6 @@
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use crate::{EhResult, ParseError, Parser, utils::unescape};
+use crate::{EhResult, Parser, REGEX_MATCH_FAILED, unescape::unescape};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryPageApi {
@@ -14,15 +14,15 @@ impl Parser for GalleryPageApi {
         let internal = serde_json::from_str::<GalleryPageApiInternal>(doc)?;
 
         let regex = Regex::new(PATTERN_IMAGE_URL).unwrap();
-        let captures = regex.captures(&internal.i3).ok_or(ParseError::RegexMatchFailed)?;
+        let captures = regex.captures(&internal.i3).ok_or(REGEX_MATCH_FAILED)?;
         let image_url = String::from(&captures[1]);
 
         let regex = Regex::new(PATTERN_SKIP_HATH_KEY).unwrap();
-        let captures = regex.captures(&internal.i6).ok_or(ParseError::RegexMatchFailed)?;
+        let captures = regex.captures(&internal.i6).ok_or(REGEX_MATCH_FAILED)?;
         let skip_hath_key = String::from(&captures[1]);
 
         let regex = Regex::new(PATTERN_ORIGIN_IMAGE_URL).unwrap();
-        let captures = regex.captures(&internal.i7).ok_or(ParseError::RegexMatchFailed)?;
+        let captures = regex.captures(&internal.i7).ok_or(REGEX_MATCH_FAILED)?;
         let origin_image_url = format!("{}{}{}", &captures[1], r#"fullimg.php"#, unescape(&captures[2]));
 
         Ok(GalleryPageApi {

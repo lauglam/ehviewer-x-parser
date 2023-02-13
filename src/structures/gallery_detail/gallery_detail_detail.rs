@@ -1,11 +1,6 @@
 use regex::Regex;
 use visdom::Vis;
-use crate::{
-    EhResult,
-    ParseError,
-    Parser,
-    utils::parse_u32,
-};
+use crate::{DOM_NOT_FOUND, EhResult, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryDetailDetail {
@@ -74,7 +69,7 @@ impl Parser for GalleryDetailDetail {
 
                     let regex = Regex::new(PATTERN_PAGES).unwrap();
                     let captures = regex.captures(&gdt2).unwrap();
-                    pages = Some(parse_u32(&captures[1])?);
+                    pages = Some(captures[1].parse()?);
                 }
                 "Favorited:" => {
                     let gdt2 = gdt1.next_element_sibling().unwrap();
@@ -82,7 +77,7 @@ impl Parser for GalleryDetailDetail {
 
                     let regex = Regex::new(PATTERN_FAVORITE_COUNT).unwrap();
                     let captures = regex.captures(&gdt2).unwrap();
-                    favorite_count = Some(parse_u32(&captures[1])?);
+                    favorite_count = Some(captures[1].parse()?);
                 }
                 _ => unreachable!()
             }
@@ -106,7 +101,7 @@ impl Parser for GalleryDetailDetail {
                 favorite_count,
             })
         } else {
-            Err(ParseError::DomNotFound("gdt1"))
+            Err(DOM_NOT_FOUND)
         }
     }
 }

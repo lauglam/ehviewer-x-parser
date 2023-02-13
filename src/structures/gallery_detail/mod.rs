@@ -1,26 +1,35 @@
+mod gallery_detail_detail;
+mod gallery_comment_list;
+mod gallery_comment;
+mod gallery_preview_large;
+mod gallery_preview_medium;
+mod gallery_preview_set;
+
+pub use {
+    gallery_detail_detail::GalleryDetailDetail,
+    gallery_comment_list::GalleryCommentList,
+    gallery_comment::GalleryComment,
+    gallery_preview_set::GalleryPreviewSet,
+    gallery_preview_medium::GalleryPreviewMedium,
+    gallery_preview_large::GalleryPreviewLarge,
+};
+
+use std::collections::HashMap;
 use regex::Regex;
 use visdom::Vis;
-use std::collections::HashMap;
 use crate::{
     EhResult,
-    Parser,
     ParseError,
-    utils::{
-        parse_f32,
-        parse_u32,
-        parse_u64,
-        unescape,
-    }, structures::{
+    Parser,
+    ATTRIBUTE_NOT_FOUND,
+    REGEX_MATCH_FAILED,
+    unescape::unescape,
+    structures::{
         Category,
         FavoriteSlot,
-        GalleryTagGroup,
         GalleryDetailUrl,
+        GalleryTagGroup,
         GalleryTagGroupList,
-        detail::{
-            GalleryCommentList,
-            GalleryDetailDetail,
-            GalleryPreviewSet,
-        },
     },
 };
 
@@ -59,7 +68,7 @@ impl Parser for GalleryDetail {
         }
 
         if doc.contains(PINING_STRING) {
-            return Err(ParseError::FromServer(String::from("this gallery is pining for the fjords.")));
+            return Err(ParseError::FromServer(String::from("this gallery_list is pining for the fjords.")));
         }
 
         let regex = Regex::new(PATTERN_ERROR).unwrap();
@@ -68,29 +77,29 @@ impl Parser for GalleryDetail {
         }
 
         let regex = Regex::new(PATTERN_DETAIL).unwrap();
-        let captures = regex.captures(doc).ok_or(ParseError::RegexMatchFailed)?;
-        let gid = parse_u64(&captures[1])?;
-        let api_uid = parse_u64(&captures[5])?;
+        let captures = regex.captures(doc).ok_or(REGEX_MATCH_FAILED)?;
+        let gid = captures[1].parse()?;
+        let api_uid = captures[5].parse()?;
         let token = String::from(&captures[3]);
         let api_key = String::from(&captures[7]);
 
         let regex = Regex::new(PATTERN_TORRENT).unwrap();
-        let captures = regex.captures(doc).ok_or(ParseError::RegexMatchFailed)?;
+        let captures = regex.captures(doc).ok_or(REGEX_MATCH_FAILED)?;
         let torrent_url = String::from(unescape(&captures[1]));
-        let torrent_count = parse_u32(&captures[2])?;
+        let torrent_count = captures[2].parse()?;
 
         let regex = Regex::new(PATTERN_ARCHIVE).unwrap();
-        let captures = regex.captures(doc).ok_or(ParseError::RegexMatchFailed)?;
+        let captures = regex.captures(doc).ok_or(REGEX_MATCH_FAILED)?;
         let archive_url = String::from(unescape(&captures[1]));
 
         let root = Vis::load(doc)?;
         let gm = root.find(".gm:not(#cdiv)");
 
         let cover = gm.find("#gd1 div:first-child");
-        let style = cover.attr("style").ok_or(ParseError::AttributeNotFound("style"))?;
+        let style = cover.attr("style").ok_or(ATTRIBUTE_NOT_FOUND)?;
         let style = style.to_string();
         let regex = Regex::new(PATTERN_COVER).unwrap();
-        let captures = regex.captures(&style).ok_or(ParseError::RegexMatchFailed)?;
+        let captures = regex.captures(&style).ok_or(REGEX_MATCH_FAILED)?;
         let thumb = String::from(&captures[3]);
 
         let gn = gm.find("#gn");
@@ -110,15 +119,15 @@ impl Parser for GalleryDetail {
         let detail = GalleryDetailDetail::parse(&gdd.html())?;
 
         let rat = gm.find("#rating_count");
-        let rating_count = parse_u32(&rat.text())?;
+        let rating_count = rat.text().parse()?;
 
         let label = gm.find("#rating_label");
         let label_text = label.text();
         let mut rating_opt: Option<f32> = None;
         if label_text != "Not Yet Rated" {
             let regex = Regex::new(PATTERN_RATING).unwrap();
-            let captures = regex.captures(&label_text).ok_or(ParseError::RegexMatchFailed)?;
-            rating_opt = Some(parse_f32(&captures[1])?);
+            let captures = regex.captures(&label_text).ok_or(REGEX_MATCH_FAILED)?;
+            rating_opt = Some(captures[1].parse()?);
         }
 
         let gdf = gm.find("#gdf");
@@ -127,7 +136,7 @@ impl Parser for GalleryDetail {
 
         let (favorite_slot_opt, favorite_name_opt) = if is_favorited {
             let i = gdf.find(".i");
-            let style = i.attr("style").ok_or(ParseError::AttributeNotFound("style"))?;
+            let style = i.attr("style").ok_or(ATTRIBUTE_NOT_FOUND)?;
             let favorite_slot = FavoriteSlot::parse(&style.to_string())?.value;
 
             (Some(favorite_slot), Some(favorite_link.text()))
@@ -145,7 +154,7 @@ impl Parser for GalleryDetail {
             let mut newer_version_map = HashMap::new();
             let hrefs = gnd.find("a");
             for (idx, href) in hrefs.into_iter().enumerate() {
-                let href = href.get_attribute("href").ok_or(ParseError::AttributeNotFound("href"))?;
+                let href = href.get_attribute("href").ok_or(ATTRIBUTE_NOT_FOUND)?;
                 let detail_url = GalleryDetailUrl::parse(&href.to_string())?;
                 newer_version_map.insert(date_vec[idx].clone(), detail_url);
             }
@@ -158,10 +167,10 @@ impl Parser for GalleryDetail {
         let comment_list = GalleryCommentList::parse(&c_div.outer_html())?;
 
         let last_page = root.find(".ptt td:nth-last-child(2) > a");
-        let preview_pages = parse_u32(&last_page.text())?;
+        let preview_pages = last_page.text().parse()?;
 
         let first_page = root.find(".ptt td:nth-child(2) > a");
-        let href = first_page.attr("href").ok_or(ParseError::AttributeNotFound("href"))?;
+        let href = first_page.attr("href").ok_or(ATTRIBUTE_NOT_FOUND)?;
         let url = href.to_string();
 
         let gdo4 = root.find("#gdo4");
@@ -208,7 +217,7 @@ impl Parser for GalleryDetail {
 }
 
 const OFFENSIVE_STRING: &str = "<p>(And if you choose to ignore this warning, you lose all rights to complain about it in the future.)</p>";
-const PINING_STRING: &str = "<p>This gallery is pining for the fjords.</p>";
+const PINING_STRING: &str = "<p>This gallery_list is pining for the fjords.</p>";
 const PATTERN_ERROR: &str = "<div class=\"d\">\n<p>([^<]+)</p>";
 const PATTERN_DETAIL: &str = "var gid = (\\d+);\\s*?(\n|\r|\r\n)?\\s*?var token = \"([a-f0-9]+)\";\\s*?(\n|\r|\r\n)?\\s*?var apiuid = ([\\-\\d]+);\\s*?(\n|\r|\r\n)?\\s*?var apikey = \"([a-f0-9]+)\";";
 const PATTERN_TORRENT: &str = r#"<a[^<>]*onclick="return popUp\('([^']+)'[^)]+\)">Torrent Download[^<]+(\d+)[^<]+</a"#;
@@ -220,7 +229,7 @@ const PATTERN_COVER: &str = r#"width:(\d+)px; height:(\d+)px.+?url\((.+?)\)"#;
 
 #[cfg(test)]
 mod tests {
-    use crate::utils::test::read_test_file;
+    use crate::test_helper::read_test_file;
     use super::*;
 
     #[test]

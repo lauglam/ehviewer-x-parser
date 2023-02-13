@@ -1,4 +1,4 @@
-use crate::{EhResult, Parser, Input};
+use crate::{EhResult, Parser, input::Input};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryMultiPageViewerPToken {

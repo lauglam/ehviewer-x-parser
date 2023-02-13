@@ -4,8 +4,8 @@ use crate::{
     EhResult,
     ParseError,
     Parser,
-    utils::parse_u32,
-    structures::detail::{
+    ATTRIBUTE_NOT_FOUND,
+    structures::gallery_detail::{
         GalleryPreviewLarge,
         GalleryPreviewMedium,
     },
@@ -58,7 +58,7 @@ impl Parser for GalleryPreviewSet {
     fn parse(doc: &str) -> EhResult<Self> {
         let root = Vis::load(doc)?;
         let gdt = root.find("#gdt > div:first-child");
-        let kind = gdt.attr("class").ok_or(ParseError::AttributeNotFound("class"))?;
+        let kind = gdt.attr("class").ok_or(ATTRIBUTE_NOT_FOUND)?;
 
         match kind.to_string().as_str() {
             r#"gdtl"# => Ok(GalleryPreviewSet::Large(parse_large(&root)?)),
@@ -120,13 +120,13 @@ fn parse_medium(doc: &str) -> Result<Vec<GalleryPreviewMedium>, ParseError> {
 
     let regex = Regex::new(PATTERN_MEDIUM_PREVIEW).unwrap();
     for cap in regex.captures_iter(doc) {
-        let clip_width = parse_u32(&cap[1])?;
-        let clip_height = parse_u32(&cap[2])?;
+        let clip_width = cap[1].parse()?;
+        let clip_height = cap[2].parse()?;
         let image_url = String::from(&cap[3]);
-        let offset_x = parse_u32(&cap[4])?;
+        let offset_x = cap[4].parse()?;
         let offset_y = 0;
         let page_url = String::from(&cap[5]);
-        let position = parse_u32(&cap[6])? - 1;
+        let position = cap[6].parse::<u32>()? - 1;
         let filename = String::from(&cap[7]);
 
         preview_vec.push(

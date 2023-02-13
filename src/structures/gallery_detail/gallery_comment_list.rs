@@ -1,6 +1,6 @@
 use std::iter::zip;
 use visdom::Vis;
-use crate::{EhResult, Parser, structures::detail::GalleryComment};
+use crate::{EhResult, Parser, structures::gallery_detail::GalleryComment};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryCommentList {

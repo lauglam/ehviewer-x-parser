@@ -1,5 +1,5 @@
 use visdom::Vis;
-use crate::{EhResult, ParseError, Parser};
+use crate::{ATTRIBUTE_NOT_FOUND, EhResult, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct Forums {
@@ -17,7 +17,7 @@ impl Parser for Forums {
         let root = Vis::load(doc)?;
         let user_link = root.find("#userlinks a");
 
-        let href = user_link.attr("href").ok_or(ParseError::AttributeNotFound("href"))?;
+        let href = user_link.attr("href").ok_or(ATTRIBUTE_NOT_FOUND)?;
         let user_link = href.to_string();
 
         Ok(Forums { user_link })
@@ -26,8 +26,8 @@ impl Parser for Forums {
 
 #[cfg(test)]
 mod tests {
+    use crate::test_helper::read_test_file;
     use super::*;
-    use crate::utils::test::read_test_file;
 
     #[test]
     fn forums_parse_test() {

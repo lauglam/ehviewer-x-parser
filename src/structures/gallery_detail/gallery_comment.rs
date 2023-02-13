@@ -1,12 +1,7 @@
 use chrono::DateTime;
 use regex::Regex;
 use visdom::Vis;
-use crate::{
-    EhResult,
-    ParseError,
-    Parser,
-    utils::{parse_u32, parse_u64},
-};
+use crate::{EhResult, Parser, REGEX_MATCH_FAILED};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryComment {
@@ -92,18 +87,18 @@ impl Parser for GalleryComment {
         let root = Vis::load(doc)?;
 
         let regex = Regex::new(PATTERN_COMMENT_ID).unwrap();
-        let captures = regex.captures(doc).ok_or(ParseError::RegexMatchFailed)?;
+        let captures = regex.captures(doc).ok_or(REGEX_MATCH_FAILED)?;
 
         // c0 is uploader comment. cannot vote.
         // id.
-        let id = parse_u64(&captures[1])?;
+        let id = captures[1].parse()?;
 
         let c3 = root.find(".c3");
         let posted = c3.text();
 
         // posted_timestamp.
         let regex = Regex::new(PATTERN_COMMENT_DATETIME).unwrap();
-        let captures = regex.captures(&posted).ok_or(ParseError::RegexMatchFailed)?;
+        let captures = regex.captures(&posted).ok_or(REGEX_MATCH_FAILED)?;
 
         let fmt = "%d %B %Y, %H:%M:%S%.3f %z";
         let date_str = format!("{}:00.000 +0000", &captures[1]);
@@ -165,7 +160,7 @@ impl Parser for GalleryComment {
 
             // score_opt.
             let span = root.find(&format!(r#".c5 #comment_score_{}"#, id));
-            score_opt = Some(parse_u32(&span.text()[1..])?);
+            score_opt = Some(span.text()[1..].parse()?);
         }
 
 

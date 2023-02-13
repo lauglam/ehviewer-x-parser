@@ -1,5 +1,5 @@
 use visdom::Vis;
-use crate::{EhResult, ParseError, Parser};
+use crate::{EhResult, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryTagGroup {
@@ -33,14 +33,10 @@ impl Parser for GalleryTagGroup {
         // gt or gtl.
         let tag_vec = root.find("[class^=gt]").map(|_, ele| ele.text());
 
-        if !tag_group_name.is_empty() && !tag_vec.is_empty() {
-            Ok(GalleryTagGroup {
-                tag_group_name,
-                tag_vec,
-            })
-        } else {
-            Err(ParseError::DomNotFound(".tc or [class^=gt]"))
-        }
+        Ok(GalleryTagGroup {
+            tag_group_name,
+            tag_vec,
+        })
     }
 }
 

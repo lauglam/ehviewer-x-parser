@@ -2,13 +2,13 @@ use serde::{Deserialize, Serialize};
 use crate::{EhResult, Parser};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct Token {
+pub struct Token {
     gid: u64,
     token: String,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct GalleryToken {
+pub struct GalleryToken {
     #[serde(alias = r#"tokenlist"#)]
     token_vec_opt: Option<Vec<Token>>,
     #[serde(alias = r#"error"#)]

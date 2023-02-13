@@ -18,14 +18,14 @@ impl Parser for GalleryNotAvailable {
 
 #[cfg(test)]
 mod tests {
-    use crate::utils::test::read_test_file;
+    use crate::test_helper::read_test_file;
     use super::*;
 
     #[test]
     fn parse_test() {
         let doc = read_test_file("gallery_not_available.html");
         assert_eq!(GalleryNotAvailable::parse(&doc).unwrap(), GalleryNotAvailable {
-            error: String::from("This gallery has been removed or is unavailable.")
+            error: String::from("This gallery_list has been removed or is unavailable.")
         })
     }
 }

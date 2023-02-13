@@ -1,6 +1,6 @@
 use regex::Regex;
 use visdom::Vis;
-use crate::{EhResult, ParseError, Parser, utils::parse_u32};
+use crate::{EhResult, Parser, REGEX_MATCH_FAILED, ATTRIBUTE_NOT_FOUND};
 
 #[derive(Debug, PartialEq)]
 pub struct GalleryPreviewLarge {
@@ -21,21 +21,21 @@ impl Parser for GalleryPreviewLarge {
         let root = Vis::load(doc)?;
 
         let a = root.find("a");
-        let href = a.attr("href").ok_or(ParseError::AttributeNotFound("href"))?;
+        let href = a.attr("href").ok_or(ATTRIBUTE_NOT_FOUND)?;
         let page_url = href.to_string();
 
         let img = a.children("img");
-        let src = img.attr("src").ok_or(ParseError::AttributeNotFound("src"))?;
+        let src = img.attr("src").ok_or(ATTRIBUTE_NOT_FOUND)?;
         let image_url = src.to_string();
 
-        let title = img.attr("title").ok_or(ParseError::AttributeNotFound("title"))?;
+        let title = img.attr("title").ok_or(ATTRIBUTE_NOT_FOUND)?;
         let title = title.to_string();
         let regex = Regex::new(PATTERN_FILENAME).unwrap();
-        let captures = regex.captures(&title).ok_or(ParseError::RegexMatchFailed)?;
+        let captures = regex.captures(&title).ok_or(REGEX_MATCH_FAILED)?;
         let filename = String::from(&captures[1]);
 
-        let alt = img.attr("alt").ok_or(ParseError::AttributeNotFound("alt"))?;
-        let position = parse_u32(&alt.to_string())? - 1;
+        let alt = img.attr("alt").ok_or(ATTRIBUTE_NOT_FOUND)?;
+        let position = alt.to_string().parse::<u32>()? - 1;
 
         Ok(GalleryPreviewLarge {
             position,
